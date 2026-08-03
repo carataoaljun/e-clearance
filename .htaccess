@@ -1,0 +1,27 @@
+# Hostinger & Apache shared hosting root configuration.
+# Routes web requests directly to public/ while strictly protecting sensitive project files.
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent direct HTTP access to sensitive root files and directories
+    RewriteRule ^(\.env|\.git|composer\.(json|lock)|package(-lock)?\.json|storage|app|bootstrap/cache|database|config|resources|routes|tests|vendor|deploy|docs) - [F,L,NC]
+
+    # Route all other web requests to the public/ directory
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Fail-closed fallback if mod_rewrite is disabled on server
+<IfModule !mod_rewrite.c>
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</IfModule>
+

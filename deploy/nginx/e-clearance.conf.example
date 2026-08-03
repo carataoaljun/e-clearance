@@ -1,0 +1,55 @@
+# Replace every example hostname, path, certificate, and PHP-FPM endpoint.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name clearance.example.edu;
+
+    return 301 https://clearance.example.edu$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name clearance.example.edu;
+
+    root /var/www/e-clearance/public;
+    index index.php;
+    autoindex off;
+
+    ssl_certificate /etc/letsencrypt/live/clearance.example.edu/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/clearance.example.edu/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Leave room for multipart overhead; Laravel still enforces the 10 MB file limit.
+    client_max_body_size 11m;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /index.php {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_param HTTPS $https if_not_empty;
+        fastcgi_param REQUEST_SCHEME $scheme;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_hide_header X-Powered-By;
+        fastcgi_hide_header Strict-Transport-Security;
+        fastcgi_hide_header X-Content-Type-Options;
+        fastcgi_hide_header Referrer-Policy;
+    }
+
+    location ~ \.php$ {
+        return 404;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}

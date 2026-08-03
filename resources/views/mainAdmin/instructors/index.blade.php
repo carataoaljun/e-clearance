@@ -1,0 +1,190 @@
+@extends('mainAdmin.layouts.admin')
+@section('title', 'Instructors — ClearanceMS')
+
+@section('content')
+<x-main-admin.page-header
+    title="Instructors"
+    description="Create, update, and manage instructor accounts and department access."
+    icon="bi bi-person-video3"
+    eyebrow="User management"
+>
+    <x-slot:actions>
+        <button class="btn-add" onclick="openAddModal()"><i class="bi bi-plus-circle-fill"></i> Add Instructor</button>
+        <button class="btn-csv" onclick="openCsvModal('instructors')"><i class="bi bi-filetype-csv"></i> Import CSV</button>
+    </x-slot:actions>
+</x-main-admin.page-header>
+
+<div class="filter-bar">
+    <form method="GET" action="{{ route('instructors.index') }}">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <input type="search" name="search" placeholder="Search name, email, ID" value="{{ request('search') }}">
+            </div>
+            <div class="col-md-3">
+                <select name="department">
+                    <option value="">All Departments</option>
+                    @foreach($departments as $dept)
+                    <option value="{{ $dept }}" {{ request('department') === $dept ? 'selected' : '' }}>{{ $dept }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="order">
+                    <option value="DESC" {{ request('order','DESC')==='DESC' ? 'selected' : '' }}>Newest</option>
+                    <option value="ASC" {{ request('order')==='ASC' ? 'selected' : '' }}>Oldest</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="limit">
+                    <option value="10" {{ request('limit')==10 ? 'selected' : '' }}>10</option>
+                    <option value="25" {{ request('limit')==25 ? 'selected' : '' }}>25</option>
+                    <option value="50" {{ request('limit')==50 ? 'selected' : '' }}>50</option>
+                    <option value="100" {{ request('limit')==100 ? 'selected' : '' }}>100</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn-filter w-100">Apply</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="data-table-wrap">
+    <div class="data-table-header">
+        <h3><i class="bi bi-table"></i> Instructor Records</h3>
+        <span style="font-size:12px;color:var(--muted);">{{ $instructors->total() }} results</span>
+    </div>
+    <div class="table-scroll">
+        <table class="cms-table">
+            <thead>
+                <tr>
+                    <th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($instructors as $row)
+                <tr>
+                    <td style="font-family:monospace;color:var(--accent2);font-weight:700;">{{ $row->instructor_id }}</td>
+                    <td>{{ $row->firstname }} {{ $row->middlename ? $row->middlename.' ' : '' }}{{ $row->lastname }} {{ $row->suffix }}</td>
+                    <td style="color:var(--muted);font-size:12px;">{{ $row->email }}</td>
+                    <td>{{ $row->department }}</td>
+                    <td style="white-space:nowrap;">
+                        <button class="act-edit" onclick='openEdit({{ json_encode($row) }})'><i class="bi bi-pencil-fill"></i> Edit</button>
+                        <form method="POST" action="{{ route('instructors.destroy', $row->instructor_id) }}" style="display:inline;" data-confirm-title="Confirm Deletion" data-confirm="Are you sure you want to delete this instructor?&#10;This action cannot be undone." data-confirm-button="Yes, Delete">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="act-delete"><i class="bi bi-trash3-fill"></i> Del</button>
+                        </form>
+                        <form method="POST" action="{{ route('instructors.reset', $row->instructor_id) }}" style="display:inline;" data-confirm-title="Reset Password?" data-confirm="A unique one-time temporary password will be generated for this instructor." data-confirm-button="Yes, Reset" data-confirm-tone="warning">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="act-reset"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                        </form>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="5"><div class="empty-state">No instructors found.</div></td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div style="padding:16px 20px;">{{ $instructors->links() }}</div>
+</div>
+
+<div class="modal-overlay" id="addModal">
+    <div class="modal-box">
+        <div class="modal-hdr">
+            <h4><i class="bi bi-person-plus-fill" style="color:var(--success);margin-right:8px;"></i>Add Instructor</h4>
+            <button class="close-btn" onclick="closeAddModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ route('instructors.store') }}" autocomplete="off">
+                @csrf
+                <div class="form-row">
+                    <div class="fg"><label>ID</label><input type="text" name="instructor_id" required autocomplete="off"></div>
+                    <div class="fg"><label>Email</label><input type="email" name="email" required autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="fg"><label>First Name</label><input type="text" name="firstname" required autocomplete="off"></div>
+                    <div class="fg"><label>Middle Name</label><input type="text" name="middlename" autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" required autocomplete="off"></div>
+                    <div class="fg"><label>Suffix</label><input type="text" name="suffix" autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="fg"><label>Password <small>(optional)</small></label><input type="password" name="password" autocomplete="new-password" placeholder="Leave blank to auto-generate"></div>
+                    <div class="fg"><label>Department</label>
+                        <select name="department" required>
+                            <option value="">Choose department</option>
+                            @foreach($departments as $dept)
+                            <option value="{{ $dept }}">{{ $dept }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-save"><i class="bi bi-plus-circle-fill"></i> Save Instructor</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+        <div class="modal-hdr">
+            <h4><i class="bi bi-pencil-square" style="color:var(--warning);margin-right:8px;"></i>Edit Instructor</h4>
+            <button class="close-btn" onclick="closeEditModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" id="editForm" autocomplete="off">
+                @csrf @method('PUT')
+                <div class="form-row">
+                    <div class="fg"><label>First Name</label><input type="text" name="firstname" id="e_firstname" required></div>
+                    <div class="fg"><label>Middle Name</label><input type="text" name="middlename" id="e_middlename"></div>
+                </div>
+                <div class="form-row">
+                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" id="e_lastname" required></div>
+                    <div class="fg"><label>Suffix</label><input type="text" name="suffix" id="e_suffix"></div>
+                </div>
+                <div class="form-row">
+                    <div class="fg"><label>Email</label><input type="email" name="email" id="e_email" required></div>
+                    <div class="fg"><label>Department</label>
+                        <select name="department" id="e_department" required>
+                            <option value="">Choose department</option>
+                            @foreach($departments as $dept)
+                            <option value="{{ $dept }}">{{ $dept }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="fg"><label>Password <small>(leave blank to keep current)</small></label><input type="password" name="password" id="e_password" autocomplete="new-password"></div>
+                <button type="submit" class="btn-save"><i class="bi bi-check-circle-fill"></i> Update Instructor</button>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+function openAddModal() {
+    document.getElementById('addModal').classList.add('show');
+}
+function closeAddModal() {
+    document.getElementById('addModal').classList.remove('show');
+}
+function openEdit(instructor) {
+    const form = document.getElementById('editForm');
+    form.action = '{{ url('/mainAdmin/instructors') }}/' + encodeURIComponent(instructor.instructor_id);
+    document.getElementById('e_firstname').value = instructor.firstname || '';
+    document.getElementById('e_middlename').value = instructor.middlename || '';
+    document.getElementById('e_lastname').value = instructor.lastname || '';
+    document.getElementById('e_suffix').value = instructor.suffix || '';
+    document.getElementById('e_email').value = instructor.email || '';
+    document.getElementById('e_department').value = instructor.department || '';
+    document.getElementById('e_password').value = '';
+    document.getElementById('editModal').classList.add('show');
+}
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('show');
+}
+</script>
+@endpush

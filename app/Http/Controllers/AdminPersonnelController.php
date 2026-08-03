@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\AdminPersonnel;
+use App\Support\StrongPassword;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
+
+class AdminPersonnelController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = AdminPersonnel::query();
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('firstname', 'like', "%{$request->search}%")
+                    ->orWhere('lastname', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('personnel_id', 'like', "%{$request->search}%");
+            });
+        }
+        if ($request->role) {
+            $query->where('role', $request->role);
+        }
+
+        $order = in_array($request->order, ['ASC', 'DESC']) ? $request->order : 'DESC';
+        $personnel = $query->orderBy('id', $order)->paginate(25)->withQueryString();
+        $validRoles = AdminPersonnel::$validRoles;
+
+        return view('mainAdmin.personnel.index', compact('personnel', 'validRoles'));
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:admin_personnel,email'],
+            'password' => ['nullable', 'string', 'max:128', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'office' => ['nullable', 'string', 'max:100'],
+            'role' => ['required', Rule::in(array_keys(AdminPersonnel::$validRoles))],
+        ], [
+            'email.unique' => 'This email address is already in use.',
+        ]);
+
+        $plainPassword = ! empty($data['password']) ? $data['password'] : StrongPassword::generate();
+        $data['password'] = Hash::make($plainPassword);
+        $data['personnel_id'] = $this->generateId();
+
+        AdminPersonnel::create($data);
+
+        return redirect()->route('personnel.index')->with('flash', ['type' => 'success', 'message' => "Personnel account created. Initial password: {$plainPassword}"]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $p = AdminPersonnel::findOrFail($id);
+        $data = $request->validate([
+            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('admin_personnel', 'email')->ignore($id)],
+            'password' => ['nullable', 'string', 'max:128', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'office' => ['nullable', 'string', 'max:100'],
+            'role' => ['required', Rule::in(array_keys(AdminPersonnel::$validRoles))],
+        ], [
+            'email.unique' => 'This email address is already in use.',
+        ]);
+        if (! empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
+        $p->update($data);
+
+        return redirect()->route('personnel.index')->with('flash', ['type' => 'success', 'message' => 'Personnel updated.']);
+    }
+
+    public function destroy($id)
+    {
+        AdminPersonnel::destroy($id);
+
+        return redirect()->route('personnel.index')->with('flash', ['type' => 'success', 'message' => 'Record deleted.']);
+    }
+
+    private function generateId(): string
+    {
+        do {
+            $id = 'AP-'.random_int(10000, 99999);
+        } while (AdminPersonnel::where('personnel_id', $id)->exists());
+
+        return $id;
+    }
+}

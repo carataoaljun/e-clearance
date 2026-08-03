@@ -1,0 +1,41 @@
+/* White theme overrides for instructor pages */
+:root{
+  --bg:#ffffff;
+  --panel:#ffffff;
+  --muted:#6b7280;
+  --text:#111827;
+  --accent:#0ea5a4; /* teal-ish */
+  --accent-strong:#0ea5a4;
+  --border:#e6e6e6;
+}
+body{background:var(--bg) !important;color:var(--text) !important;font-family:Mulish,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;background:#ffffff !important;background-image:none !important;}
+html{background:#ffffff !important;}
+.overlay{background:transparent !important;}
+.topbar, .sidebar, .main, .brand, .login-card{background:var(--panel) !important}
+.topbar{border-bottom:1px solid var(--border);box-shadow:none}
+.sidebar{background:#ffffff !important;}
+.main{background:#ffffff !important;}
+.sidebar{position:fixed !important;}
+.sidebar.closed{transform: translateX(-112%) !important;opacity:0 !important;pointer-events:none !important;z-index:9990 !important;}
+.sidebar.open{transform: translateX(0) !important;opacity:1 !important;pointer-events:auto !important;z-index:100000 !important;}
+.main{margin-left:0 !important;position:relative;z-index:1 !important;}
+.topbar{position:relative;z-index:100001 !important;pointer-events:auto !important;}
+.overlay{background:transparent !important;z-index:9995 !important;pointer-events:none !important;}
+.overlay.show{pointer-events:auto !important;}
+.brand span{color:var(--text)}
+.user-pill, .nav-link{color:var(--text) !important}
+.nav-link{border-left:3px solid transparent;padding:10px 14px}
+.nav-link.active{background:transparent;border-left-color:var(--accent);color:var(--accent-strong) !important;font-weight:600}
+.btn-login, .btn-logout, .btn-esig{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 12px}
+.info-card, .dtable, .stat-card, .login-card, .welcome-banner{background:var(--panel);box-shadow:0 6px 18px rgba(15,23,42,0.04);border:1px solid var(--border)}
+.dtable th, .dtable td{border-bottom:1px solid var(--border)}
+a{color:var(--accent)}
+/* reduce vivid dept colors */
+[class^="dept-"]{background:var(--bg) !important}
+/* e-signature modal adjustments */
+.esig-modal, .modal{background:var(--panel);color:var(--text)}
+/* ensure form inputs are visible */
+input, select, textarea{background:#fff;color:var(--text);border:1px solid var(--border)}
+/* toast */
+#msToast div{box-shadow:0 10px 30px rgba(2,6,23,.08)}
+@media (max-width:1100px){.sidebar{background:var(--panel);}}

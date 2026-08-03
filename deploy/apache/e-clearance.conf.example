@@ -1,0 +1,48 @@
+# Replace every example hostname, path, certificate, and log location before use.
+# Required modules include ssl, rewrite, headers, alias, and the site's PHP
+# handler. This file must be included by Apache's main configuration.
+
+<VirtualHost *:80>
+    ServerName clearance.example.edu
+
+    Redirect permanent / https://clearance.example.edu/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName clearance.example.edu
+    DocumentRoot "C:/sites/e-clearance/public"
+
+    SSLEngine on
+    SSLCertificateFile "C:/certificates/clearance.example.edu/fullchain.pem"
+    SSLCertificateKeyFile "C:/certificates/clearance.example.edu/privkey.pem"
+    SSLProtocol -all +TLSv1.2 +TLSv1.3
+
+    # Prevent access to every project directory except the intended web root.
+    # AllowOverride None also prevents the parent fail-closed .htaccess from
+    # interfering with the explicitly allowed public directory below.
+    <Directory "C:/sites/e-clearance">
+        AllowOverride None
+        Require all denied
+    </Directory>
+
+    <Directory "C:/sites/e-clearance/public">
+        AllowOverride All
+        Options -Indexes -Includes +FollowSymLinks
+        Require all granted
+    </Directory>
+
+    # Normalize the three headers also emitted by Laravel so Apache remains the
+    # single owner for both dynamic responses and static public/build assets.
+    Header onsuccess unset Strict-Transport-Security
+    Header onsuccess unset X-Content-Type-Options
+    Header onsuccess unset Referrer-Policy
+    Header always unset Strict-Transport-Security
+    Header always unset X-Content-Type-Options
+    Header always unset Referrer-Policy
+    Header always set Strict-Transport-Security "max-age=31536000"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    ErrorLog "C:/sites/e-clearance/storage/logs/apache-error.log"
+    CustomLog "C:/sites/e-clearance/storage/logs/apache-access.log" combined
+</VirtualHost>
