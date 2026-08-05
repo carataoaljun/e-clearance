@@ -747,6 +747,23 @@ body.main-admin-portal .form-label {
     }
 }
 
+@media (max-width: 768px) {
+    body.main-admin-portal .sidebar-inner {
+        overflow: hidden;
+    }
+
+    body.main-admin-portal .sidebar-nav-links {
+        min-height: 0;
+        padding-right: 3px;
+        align-content: start;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+}
+
 @media (max-width: 600px) {
     body.main-admin-portal .main {
         padding: 14px 11px 28px;

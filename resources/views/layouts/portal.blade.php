@@ -302,11 +302,10 @@
                     <i class="bi bi-android2"></i> Download Application
                 </a>
             @endif
-        </div>
-
-        <div class="sidebar-account-group">
-            <div class="nav-section">Account</div>
-            @yield('logout-form')
+            <div class="sidebar-account-group">
+                <div class="nav-section">Account</div>
+                @yield('logout-form')
+            </div>
         </div>
     </div>
 </nav>

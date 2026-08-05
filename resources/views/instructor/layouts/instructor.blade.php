@@ -173,11 +173,10 @@
             <a href="{{ route('instructor.submissions.index') }}" class="nav-link {{ request()->routeIs('instructor.submissions*') ? 'active' : '' }}"><i class="bi bi-file-earmark-arrow-up"></i> Submissions</a>
             <a href="{{ route('instructor.clearance') }}" class="nav-link {{ request()->routeIs('instructor.clearance') ? 'active' : '' }}"><i class="bi bi-clipboard2-check"></i> Clearance</a>
             <a href="{{ route('instructor.chat') }}" class="nav-link {{ request()->routeIs('instructor.chat') ? 'active' : '' }}"><i class="bi bi-chat-square-text"></i> Messages</a>
-        </div>
-
-        <div class="sidebar-account-group">
-            <div class="nav-section">Account</div>
-            <form method="POST" action="{{ route('instructor.logout') }}">@csrf<button type="submit" class="sidebar-action"><i class="bi bi-box-arrow-right"></i> Log Out</button></form>
+            <div class="sidebar-account-group">
+                <div class="nav-section">Account</div>
+                <form method="POST" action="{{ route('instructor.logout') }}">@csrf<button type="submit" class="sidebar-action"><i class="bi bi-box-arrow-right"></i> Log Out</button></form>
+            </div>
         </div>
     </div>
 </div>

@@ -358,6 +358,20 @@ body.student-portal-theme .overlay.show {
     body.student-portal-theme .sidebar { top: 67px !important; width: min(300px, calc(100% - 18px)); height: calc(100vh - 67px); border-radius: 0 20px 20px 0; }
 }
 
+@supports (height: 100dvh) {
+    @media (max-width: 768px) {
+        body.student-portal-theme .main {
+            height: calc(100dvh - 67px);
+            min-height: calc(100dvh - 67px);
+            max-height: calc(100dvh - 67px);
+        }
+
+        body.student-portal-theme .sidebar {
+            height: calc(100dvh - 67px);
+        }
+    }
+}
+
 @media (max-width: 992px) {
     body.student-portal-theme .main.sidebar-open { margin-left: 0; }
 }
