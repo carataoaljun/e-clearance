@@ -292,8 +292,8 @@ body.student-portal-theme .sidebar .nav-link.active::after {
 body.student-portal-theme .sidebar .nav-link:hover i { color: #176fc0; transform: scale(1.04); }
 body.student-portal-theme .sidebar .nav-link.active i { color: #fff; background: transparent; }
 body.student-portal-theme .sidebar-account-group {
-    margin-top: auto;
-    padding-top: 15px;
+    margin-top: 10px;
+    padding-top: 8px;
 }
 body.student-portal-theme .sidebar-account-group::before {
     content: "";
