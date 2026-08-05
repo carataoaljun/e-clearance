@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('css/auth-form-validation.css') }}" rel="stylesheet">
     <style>
         :root {
             --blue: #075bea;
@@ -405,12 +406,12 @@
                         <div class="field">
                             <i class="bi bi-person" aria-hidden="true"></i>
                             <label for="student_id" hidden>Student ID</label>
-                            <input type="text" name="student_id" id="student_id" value="{{ old('student_id') }}" placeholder="Student ID" autocomplete="username" @if($activePanel === 'login') autofocus @endif required @error('student_id') aria-invalid="true" @enderror>
+                            <input type="text" name="student_id" id="student_id" value="{{ old('student_id') }}" placeholder="Student ID" autocomplete="username" maxlength="50" data-validation-label="Student ID" @if($activePanel === 'login') autofocus @endif required @error('student_id') aria-invalid="true" @enderror>
                         </div>
                         <div class="field">
                             <i class="bi bi-lock" aria-hidden="true"></i>
                             <label for="password" hidden>Password</label>
-                            <input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" required @error('password') aria-invalid="true" @enderror>
+                            <input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" maxlength="128" data-validation-label="Password" required @error('password') aria-invalid="true" @enderror>
                             <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
                         </div>
                         <div class="form-options">
@@ -430,7 +431,7 @@
                         <div class="field">
                             <i class="bi bi-envelope" aria-hidden="true"></i>
                             <label for="recovery_email" hidden>Registered email address</label>
-                            <input type="email" name="email" id="recovery_email" value="{{ old('email', $recoveryEmail) }}" placeholder="Registered email address" autocomplete="email" required>
+                            <input type="email" name="email" id="recovery_email" value="{{ old('email', $recoveryEmail) }}" placeholder="Registered email address" autocomplete="email" maxlength="150" data-validation-label="Registered email address" required>
                         </div>
                         <button type="submit" class="login-button"><i class="bi bi-send" aria-hidden="true"></i><span>Verify Account &amp; Send Code</span></button>
                     </form>
@@ -445,7 +446,7 @@
                         <div class="field code-field">
                             <i class="bi bi-shield-lock" aria-hidden="true"></i>
                             <label for="verification_code" hidden>Six-digit verification code</label>
-                            <input type="text" inputmode="numeric" name="verification_code" id="verification_code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" required autofocus>
+                            <input type="text" inputmode="numeric" name="verification_code" id="verification_code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" data-validation-label="Verification code" data-validation-rule="verification-code" required autofocus>
                         </div>
                         <button type="submit" class="login-button"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Confirm Verification Code</span></button>
                     </form>
@@ -463,13 +464,13 @@
                         <div class="field">
                             <i class="bi bi-lock" aria-hidden="true"></i>
                             <label for="new_password" hidden>New password</label>
-                            <input type="password" name="password" id="new_password" placeholder="New password" autocomplete="new-password" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}" required>
+                            <input type="password" name="password" id="new_password" placeholder="New password" autocomplete="new-password" minlength="8" maxlength="128" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}" data-validation-label="New password" data-validation-rule="strong-password" data-password-primary required>
                             <button class="password-toggle" type="button" data-password-toggle="new_password" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
                         </div>
                         <div class="field">
                             <i class="bi bi-shield-lock" aria-hidden="true"></i>
                             <label for="new_password_confirmation" hidden>Confirm new password</label>
-                            <input type="password" name="password_confirmation" id="new_password_confirmation" placeholder="Confirm new password" autocomplete="new-password" required>
+                            <input type="password" name="password_confirmation" id="new_password_confirmation" placeholder="Confirm new password" autocomplete="new-password" maxlength="128" data-validation-label="Password confirmation" data-password-confirmation required>
                             <button class="password-toggle" type="button" data-password-toggle="new_password_confirmation" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
                         </div>
                         <p class="password-hint">Use at least 8 characters with uppercase, lowercase, a number, and a special character.</p>
@@ -520,5 +521,6 @@
             });
         });
     </script>
+    <script src="{{ asset('js/auth-form-validation.js') }}"></script>
 </body>
 </html>

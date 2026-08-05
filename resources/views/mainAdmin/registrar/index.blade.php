@@ -72,8 +72,9 @@
                 </div>
                 <div class="form-row">
                     <div class="fg"><label>Email</label><input type="email" name="email" required></div>
-                    <div class="fg"><label>Password <small>(optional)</small></label><input type="password" name="password" autocomplete="new-password" placeholder="Leave blank to auto-generate"></div>
+                    <div class="fg"><label>Password <small>(optional)</small></label><input type="password" name="password" id="add_password" autocomplete="new-password" placeholder="Leave blank to auto-generate"></div>
                 </div>
+                <div class="fg"><label>Confirm Password</label><input type="password" name="password_confirmation" id="add_password_confirmation" autocomplete="new-password" placeholder="Re-enter the password"></div>
                 <button type="submit" class="btn-save"><i class="bi bi-plus-circle-fill"></i> Save Registrar</button>
             </form>
         </div>
@@ -95,8 +96,9 @@
                 </div>
                 <div class="form-row">
                     <div class="fg"><label>Email</label><input type="email" name="email" id="e_email" required></div>
-                    <div class="fg"><label>Password <small>(optional)</small></label><input type="password" name="password" id="e_password" autocomplete="new-password"></div>
+                    <div class="fg"><label>New Password <small>(leave blank to keep current)</small></label><input type="password" name="password" id="e_password" autocomplete="new-password"></div>
                 </div>
+                <div class="fg"><label>Confirm New Password</label><input type="password" name="password_confirmation" id="e_password_confirmation" autocomplete="new-password" placeholder="Re-enter the new password"></div>
                 <button type="submit" class="btn-save"><i class="bi bi-check-circle-fill"></i> Update Registrar</button>
             </form>
         </div>
@@ -106,7 +108,11 @@
 
 @push('scripts')
 <script>
-function openAddModal() { document.getElementById('addModal').classList.add('show'); }
+function openAddModal() {
+    document.getElementById('add_password').value = '';
+    document.getElementById('add_password_confirmation').value = '';
+    document.getElementById('addModal').classList.add('show');
+}
 function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
 function openEdit(record) {
     const form = document.getElementById('editForm');
@@ -115,6 +121,7 @@ function openEdit(record) {
     document.getElementById('e_lastname').value = record.lastname || '';
     document.getElementById('e_email').value = record.email || '';
     document.getElementById('e_password').value = '';
+    document.getElementById('e_password_confirmation').value = '';
     document.getElementById('editModal').classList.add('show');
 }
 function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }

@@ -1,0 +1,27 @@
+.auth-panel .field input.field-invalid,
+.auth-panel .field select.field-invalid {
+    border-color: #dc3545;
+    background: #fff8f8;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, .1);
+}
+
+.auth-panel .field input.field-valid,
+.auth-panel .field select.field-valid {
+    border-color: #1eaa72;
+    background: #f8fffb;
+}
+
+.auth-panel .field-error {
+    display: none;
+    min-height: 16px;
+    margin: -9px 5px 11px;
+    color: #c6293f;
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.auth-panel .field-error.show {
+    display: block;
+}
+

@@ -5,6 +5,7 @@ use App\Http\Controllers\ClearanceFormController;
 use App\Http\Controllers\Registrar\AuthController as RegistrarAuthController;
 use App\Http\Controllers\Registrar\DashboardController as RegistrarDashboardController;
 use App\Http\Controllers\Registrar\StudentClearanceController as RegistrarStudentClearanceController;
+use App\Http\Controllers\Student\ApplicationDownloadController;
 use App\Http\Controllers\Student\AuthController as StudentAuthController;
 use App\Http\Controllers\Student\ChatSupportController;
 use App\Http\Controllers\Student\ClearanceUpdatesController;
@@ -35,6 +36,7 @@ Route::prefix('student')->name('student.')->group(function () {
 
     Route::middleware('student.auth')->group(function () {
         Route::get('dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+        Route::get('application/download', ApplicationDownloadController::class)->name('application.download');
         Route::get('clearance-form', [ClearanceFormController::class, 'student'])->name('clearance.form');
         Route::get('clearance-form/download', [ClearanceFormController::class, 'studentDownload'])->name('clearance.form.download');
         Route::get('clearance-updates', [ClearanceUpdatesController::class, 'index'])->name('clearance-updates');

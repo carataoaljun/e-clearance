@@ -33,7 +33,7 @@ class RegistrarController extends Controller
             'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:registrar,email'],
-            'password' => ['nullable', 'string', 'max:128', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
         ], [
             'email.unique' => 'This email address is already in use.',
         ]);
@@ -53,7 +53,7 @@ class RegistrarController extends Controller
             'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('registrar', 'email')->ignore($id)],
-            'password' => ['nullable', 'string', 'max:128', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
         ], [
             'email.unique' => 'This email address is already in use.',
         ]);

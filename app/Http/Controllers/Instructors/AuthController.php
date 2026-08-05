@@ -23,7 +23,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'email' => ['required', 'email', 'max:100'],
-            'password' => ['required', 'string', 'min:6', 'max:128'],
+            'password' => ['required', 'string', 'max:128'],
         ]);
 
         $remember = $request->boolean('remember');

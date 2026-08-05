@@ -316,6 +316,19 @@ document.addEventListener('DOMContentLoaded', () => {
 setInterval(loadNotifications, 30000);
 
 function prepareConditionalAccountRules(form) {
+    const passwordField = form.querySelector('input[name="password"]');
+    const confirmationField = form.querySelector('input[name="password_confirmation"]');
+    if (passwordField && confirmationField) {
+        const password = passwordField.value;
+        const confirmation = confirmationField.value;
+
+        confirmationField.required = password !== '';
+        confirmationField.setCustomValidity(
+            confirmation !== '' && confirmation !== password ? 'Passwords do not match.' : ''
+        );
+        updateRequiredMarker(confirmationField);
+    }
+
     const typeField = form.querySelector('[name="treasurer_type"]');
     if (!typeField) return;
     const treasurerType = typeField.value;
@@ -362,11 +375,12 @@ function fieldLabel(field) {
 
 function validationMessageFor(field) {
     const name = fieldLabel(field);
+    if (field.validity.customError) return field.validationMessage;
     if (field.validity.valueMissing) return `${name} is required.`;
     if (field.validity.typeMismatch) return `Enter a valid ${name.toLowerCase()}.`;
     if (field.validity.tooShort) return `${name} must contain at least ${field.minLength} characters.`;
     if (field.validity.tooLong) return `${name} must not exceed ${field.maxLength} characters.`;
-    if (field.validity.patternMismatch && field.type === 'password') return 'Use at least 8 characters with uppercase, lowercase, number, and special character.';
+    if (field.validity.patternMismatch && field.dataset.passwordField === 'true') return 'Use at least 8 characters with uppercase, lowercase, number, and special character.';
     if (field.validity.patternMismatch && field.name === 'student_id') return 'Use the student ID format YYYY-NNNN (e.g. 2023-0387).';
     if (field.validity.patternMismatch && field.name === 'instructor_id') return 'Use a 4-digit employee ID (e.g. 1234).';
     if (field.validity.patternMismatch) return `${name} may contain letters, spaces, apostrophes, and hyphens only.`;
@@ -396,6 +410,47 @@ function validateModalField(field, showSuccess = true) {
 
     if (showSuccess && hasValue) field.classList.add('field-valid');
     return true;
+}
+
+function initializePasswordVisibilityToggle(field) {
+    if (field.dataset.passwordToggleReady === 'true') return;
+
+    field.dataset.passwordField = 'true';
+    field.dataset.passwordToggleReady = 'true';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'password-input-wrap';
+    field.before(wrapper);
+    wrapper.appendChild(field);
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'password-visibility-toggle';
+    toggle.setAttribute('aria-label', 'Show password');
+    toggle.setAttribute('aria-pressed', 'false');
+    toggle.innerHTML = '<i class="bi bi-eye" aria-hidden="true"></i>';
+    wrapper.appendChild(toggle);
+
+    toggle.addEventListener('click', () => {
+        const willShow = field.type === 'password';
+        field.type = willShow ? 'text' : 'password';
+        toggle.setAttribute('aria-label', willShow ? 'Hide password' : 'Show password');
+        toggle.setAttribute('aria-pressed', String(willShow));
+        toggle.querySelector('i').className = willShow ? 'bi bi-eye-slash' : 'bi bi-eye';
+        field.focus({ preventScroll: true });
+    });
+}
+
+function resetPasswordVisibility(scope) {
+    scope.querySelectorAll('.password-visibility-toggle').forEach(toggle => {
+        const field = toggle.closest('.password-input-wrap')?.querySelector('[data-password-field="true"]');
+        if (!field) return;
+
+        field.type = 'password';
+        toggle.setAttribute('aria-label', 'Show password');
+        toggle.setAttribute('aria-pressed', 'false');
+        toggle.querySelector('i').className = 'bi bi-eye';
+    });
 }
 
 function initializeAdminModalValidation() {
@@ -428,6 +483,7 @@ function initializeAdminModalValidation() {
                 field.pattern = '(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}';
                 if (!field.placeholder) field.placeholder = field.required ? 'e.g. StrongPass1!' : 'Leave blank to keep current password';
                 field.title = 'At least 8 characters with uppercase, lowercase, number, and special character.';
+                initializePasswordVisibilityToggle(field);
             }
             if (field.name === 'student_id') {
                 field.pattern = '\\d{4}-\\d{4}';
@@ -455,13 +511,20 @@ function initializeAdminModalValidation() {
 
             field.addEventListener('blur', () => validateModalField(field));
             field.addEventListener('input', () => {
+                prepareConditionalAccountRules(form);
                 if (field.classList.contains('field-invalid')) validateModalField(field, false);
+                if (field.name === 'password') {
+                    const confirmation = form.querySelector('input[name="password_confirmation"]');
+                    if (confirmation?.classList.contains('field-invalid')) validateModalField(confirmation, false);
+                }
             });
             field.addEventListener('change', () => {
                 prepareConditionalAccountRules(form);
                 validateModalField(field);
             });
         });
+
+        prepareConditionalAccountRules(form);
 
         form.addEventListener('submit', event => {
             prepareConditionalAccountRules(form);
@@ -474,6 +537,11 @@ function initializeAdminModalValidation() {
                 firstInvalid.focus();
             }
         });
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        new MutationObserver(() => resetPasswordVisibility(modal))
+            .observe(modal, { attributes: true, attributeFilter: ['class'] });
     });
 }
 

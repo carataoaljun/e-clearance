@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MCC e-Clearance</string>
+    <string name="app_subtitle">Student Portal</string>
+    <string name="default_server_root">https://your-clearance-domain.example</string>
+    <string name="server_settings">Server settings</string>
+    <string name="server_address_hint">https://clearance.example.edu</string>
+    <string name="connection_error_title">Student portal unavailable</string>
+    <string name="connection_error_body">Check that the Laravel server is running and that this device can reach the configured address.</string>
+    <string name="retry">Retry</string>
+</resources>

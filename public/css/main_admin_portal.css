@@ -289,6 +289,40 @@ body.main-admin-portal .fg textarea:focus {
     box-shadow: 0 0 0 3px rgba(29, 137, 211, .12);
 }
 
+body.main-admin-portal .password-input-wrap {
+    position: relative;
+}
+
+body.main-admin-portal .password-input-wrap input {
+    width: 100%;
+    padding-right: 46px;
+}
+
+body.main-admin-portal .password-visibility-toggle {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    color: #607a94;
+    background: transparent;
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition: color .16s ease, background-color .16s ease;
+}
+
+body.main-admin-portal .password-visibility-toggle:hover,
+body.main-admin-portal .password-visibility-toggle:focus-visible {
+    color: #147fc4;
+    background: rgba(219, 239, 253, .82);
+    outline: none;
+}
+
 body.main-admin-portal .filter-bar .btn-filter,
 body.main-admin-portal .filter-bar .filter-reset {
     min-height: 42px;

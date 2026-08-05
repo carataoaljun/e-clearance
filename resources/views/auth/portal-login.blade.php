@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('css/auth-form-validation.css') }}" rel="stylesheet">
     <style>
         :root { --blue:#075bea; --ink:#071b50; --muted:#526b91; }
         * { box-sizing:border-box; }
@@ -94,11 +95,11 @@
             <div class="auth-panel" data-panel="login" @if($activePanel !== 'login') hidden @endif>
                 <form method="POST" action="{{ $submitRoute }}" autocomplete="off">
                     @csrf
-                    <div class="field"><i class="bi {{ $loginIcon }}"></i><label for="portal-login" hidden>{{ $loginLabel }}</label><input type="{{ $loginType }}" name="{{ $loginName }}" id="portal-login" value="{{ old($loginName) }}" placeholder="{{ $loginPlaceholder }}" autocomplete="username" @if($activePanel === 'login') autofocus @endif required></div>
+                    <div class="field"><i class="bi {{ $loginIcon }}"></i><label for="portal-login" hidden>{{ $loginLabel }}</label><input type="{{ $loginType }}" name="{{ $loginName }}" id="portal-login" value="{{ old($loginName) }}" placeholder="{{ $loginPlaceholder }}" autocomplete="username" maxlength="100" data-validation-label="{{ $loginLabel }}" @if($activePanel === 'login') autofocus @endif required></div>
                     @if(!empty($roleOptions))
-                        <div class="field"><i class="bi bi-person-badge"></i><label for="portal-role" hidden>{{ $roleLabel }}</label><select name="{{ $roleName }}" id="portal-role" required><option value="">{{ $rolePlaceholder }}</option>@foreach($roleOptions as $value=>$label)<option value="{{ $value }}" @selected(old($roleName)===$value)>{{ $label }}</option>@endforeach</select></div>
+                        <div class="field"><i class="bi bi-person-badge"></i><label for="portal-role" hidden>{{ $roleLabel }}</label><select name="{{ $roleName }}" id="portal-role" data-validation-label="{{ $roleLabel }}" required><option value="">{{ $rolePlaceholder }}</option>@foreach($roleOptions as $value=>$label)<option value="{{ $value }}" @selected(old($roleName)===$value)>{{ $label }}</option>@endforeach</select></div>
                     @endif
-                    <div class="field"><i class="bi bi-lock"></i><label for="password" hidden>Password</label><input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" required><button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password"><i class="bi bi-eye"></i></button></div>
+                    <div class="field"><i class="bi bi-lock"></i><label for="password" hidden>Password</label><input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" maxlength="128" data-validation-label="Password" required><button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye"></i></button></div>
                     <div class="form-options">@if($showRemember)<label class="remember"><input type="checkbox" name="remember" @checked(old('remember'))><span>Remember me</span></label>@else<span></span>@endif<button class="forgot" type="button" data-show-auth-panel="email">Forgot password?</button></div>
                     <button type="submit" class="login-button"><i class="bi bi-box-arrow-in-right"></i><span>Log In</span></button>
                 </form>
@@ -109,7 +110,7 @@
                 <p class="recovery-note">Enter your registered email. We will confirm that the {{ strtolower($portalName) }} account exists before sending a code.</p>
                 <form method="POST" action="{{ route('portal-password-recovery.send-code', $recoveryPortal) }}">
                     @csrf<input type="hidden" name="recovery_action" value="email"><input type="hidden" name="recovery_portal" value="{{ $recoveryPortal }}">
-                    <div class="field"><i class="bi bi-envelope"></i><label for="recovery-email" hidden>Registered email</label><input type="email" name="email" id="recovery-email" value="{{ old('email', $recoveryEmail) }}" placeholder="Registered email address" autocomplete="email" required></div>
+                    <div class="field"><i class="bi bi-envelope"></i><label for="recovery-email" hidden>Registered email</label><input type="email" name="email" id="recovery-email" value="{{ old('email', $recoveryEmail) }}" placeholder="Registered email address" autocomplete="email" maxlength="150" data-validation-label="Registered email address" required></div>
                     <button type="submit" class="login-button"><i class="bi bi-send"></i><span>Verify Account &amp; Send Code</span></button>
                 </form>
                 <button type="button" class="back-button" data-show-auth-panel="login"><i class="bi bi-arrow-left"></i> Back to Login</button>
@@ -120,7 +121,7 @@
                 <p class="recovery-note">Code sent to <strong>{{ $maskedEmail }}</strong>. It expires after 10 minutes.</p>
                 <form method="POST" action="{{ route('portal-password-recovery.verify-code', $recoveryPortal) }}">
                     @csrf
-                    <div class="field code-field"><i class="bi bi-shield-lock"></i><label for="verification-code" hidden>Six-digit verification code</label><input type="text" inputmode="numeric" name="verification_code" id="verification-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" required autofocus></div>
+                    <div class="field code-field"><i class="bi bi-shield-lock"></i><label for="verification-code" hidden>Six-digit verification code</label><input type="text" inputmode="numeric" name="verification_code" id="verification-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" data-validation-label="Verification code" data-validation-rule="verification-code" required autofocus></div>
                     <button type="submit" class="login-button"><i class="bi bi-check2-circle"></i><span>Confirm Verification Code</span></button>
                 </form>
                 <div class="recovery-footer">
@@ -134,8 +135,8 @@
                 <p class="recovery-note">Email verified for <strong>{{ $maskedEmail }}</strong>.</p>
                 <form method="POST" action="{{ route('portal-password-recovery.reset', $recoveryPortal) }}">
                     @csrf
-                    <div class="field"><i class="bi bi-lock"></i><label for="new-password" hidden>New password</label><input type="password" name="password" id="new-password" placeholder="New password" autocomplete="new-password" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}" required><button class="password-toggle" type="button" data-password-toggle="new-password" aria-label="Show password"><i class="bi bi-eye"></i></button></div>
-                    <div class="field"><i class="bi bi-shield-lock"></i><label for="new-password-confirmation" hidden>Confirm new password</label><input type="password" name="password_confirmation" id="new-password-confirmation" placeholder="Confirm new password" autocomplete="new-password" required><button class="password-toggle" type="button" data-password-toggle="new-password-confirmation" aria-label="Show password"><i class="bi bi-eye"></i></button></div>
+                    <div class="field"><i class="bi bi-lock"></i><label for="new-password" hidden>New password</label><input type="password" name="password" id="new-password" placeholder="New password" autocomplete="new-password" minlength="8" maxlength="128" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}" data-validation-label="New password" data-validation-rule="strong-password" data-password-primary required><button class="password-toggle" type="button" data-password-toggle="new-password" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye"></i></button></div>
+                    <div class="field"><i class="bi bi-shield-lock"></i><label for="new-password-confirmation" hidden>Confirm new password</label><input type="password" name="password_confirmation" id="new-password-confirmation" placeholder="Confirm new password" autocomplete="new-password" maxlength="128" data-validation-label="Password confirmation" data-password-confirmation required><button class="password-toggle" type="button" data-password-toggle="new-password-confirmation" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye"></i></button></div>
                     <p class="password-hint">Use at least 8 characters with uppercase, lowercase, a number, and a special character.</p>
                     <button type="submit" class="login-button"><i class="bi bi-check2-circle"></i><span>Save New Password</span></button>
                 </form>
@@ -150,7 +151,8 @@
 const headingMap=@json($panelHeadings),headingTitle=document.getElementById('auth-heading-title'),headingCopy=document.getElementById('auth-heading-copy'),headingIcon=document.getElementById('auth-heading-icon');
 function showAuthPanel(name){const panel=document.querySelector(`[data-panel="${name}"]`);if(!panel)return;document.querySelectorAll('[data-panel]').forEach(item=>{item.hidden=item!==panel;item.classList.remove('panel-enter')});panel.classList.add('panel-enter');headingTitle.textContent=headingMap[name].title;headingCopy.textContent=headingMap[name].subtitle;headingIcon.className=`bi ${headingMap[name].icon}`;window.setTimeout(()=>panel.querySelector('input:not([type="hidden"])')?.focus(),80)}
 document.querySelectorAll('[data-show-auth-panel]').forEach(button=>button.addEventListener('click',()=>showAuthPanel(button.dataset.showAuthPanel)));
-document.querySelectorAll('[data-password-toggle]').forEach(toggle=>toggle.addEventListener('click',()=>{const password=document.getElementById(toggle.dataset.passwordToggle),show=password.type==='password';password.type=show?'text':'password';toggle.setAttribute('aria-label',show?'Hide password':'Show password');toggle.querySelector('i').className=show?'bi bi-eye-slash':'bi bi-eye';password.focus()}));
+document.querySelectorAll('[data-password-toggle]').forEach(toggle=>toggle.addEventListener('click',()=>{const password=document.getElementById(toggle.dataset.passwordToggle),show=password.type==='password';password.type=show?'text':'password';toggle.setAttribute('aria-label',show?'Hide password':'Show password');toggle.setAttribute('aria-pressed',String(show));toggle.querySelector('i').className=show?'bi bi-eye-slash':'bi bi-eye';password.focus()}));
 </script>
+<script src="{{ asset('js/auth-form-validation.js') }}"></script>
 </body>
 </html>

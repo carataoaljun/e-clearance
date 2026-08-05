@@ -93,8 +93,9 @@
                 </div>
                 <div class="form-row">
                     <div class="fg"><label>Email</label><input type="email" name="email" required></div>
-                    <div class="fg"><label>Password <small>(optional)</small></label><input type="password" name="password" autocomplete="new-password" placeholder="Leave blank to auto-generate"></div>
+                    <div class="fg"><label>Password <small>(optional)</small></label><input type="password" name="password" id="add_password" autocomplete="new-password" placeholder="Leave blank to auto-generate"></div>
                 </div>
+                <div class="fg"><label>Confirm Password</label><input type="password" name="password_confirmation" id="add_password_confirmation" autocomplete="new-password" placeholder="Re-enter the password"></div>
                 <div class="form-row">
                     <div class="fg"><label>Type</label>
                         <select name="treasurer_type" id="t_type" required onchange="toggleTreasurerFields()">
@@ -160,8 +161,9 @@
                 </div>
                 <div class="form-row">
                     <div class="fg"><label>Email</label><input type="email" name="email" id="e_email" required></div>
-                    <div class="fg"><label>Password <small>(leave blank to keep)</small></label><input type="password" name="password" id="e_password" autocomplete="new-password"></div>
+                    <div class="fg"><label>New Password <small>(leave blank to keep)</small></label><input type="password" name="password" id="e_password" autocomplete="new-password"></div>
                 </div>
+                <div class="fg"><label>Confirm New Password</label><input type="password" name="password_confirmation" id="e_password_confirmation" autocomplete="new-password" placeholder="Re-enter the new password"></div>
                 <div class="form-row">
                     <div class="fg"><label>Type</label>
                         <select name="treasurer_type" id="e_type" required onchange="toggleTreasurerFields('edit')">
@@ -228,6 +230,8 @@ function toggleTreasurerFields(mode = 'create') {
 }
 
 function openAddModal() {
+    document.getElementById('add_password').value = '';
+    document.getElementById('add_password_confirmation').value = '';
     toggleTreasurerFields('create');
     document.getElementById('addModal').classList.add('show');
 }
@@ -242,6 +246,7 @@ function openEdit(treasurer) {
     document.getElementById('e_suffix').value = treasurer.suffix || '';
     document.getElementById('e_email').value = treasurer.email || '';
     document.getElementById('e_password').value = '';
+    document.getElementById('e_password_confirmation').value = '';
     document.getElementById('e_type').value = treasurer.treasurer_type || '';
     document.getElementById('e_department').value = treasurer.department || '';
     document.getElementById('e_program').value = treasurer.program || '';

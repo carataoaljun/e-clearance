@@ -230,6 +230,7 @@
             if (str_contains($currentRoute, '.')) {
                 $routePrefix = explode('.', $currentRoute)[0];
             }
+            $isStudentAndroidApp = str_contains((string) request()->userAgent(), 'MCCStudentAndroid/');
 
             $guardName = match ($routePrefix) {
                 'office', 'treasurer', 'registrar', 'student', 'instructor' => $routePrefix,
@@ -294,7 +295,14 @@
         </div>
 
         <div class="nav-section">Menu</div>
-        <div class="sidebar-nav-links">@yield('nav')</div>
+        <div class="sidebar-nav-links">
+            @yield('nav')
+            @if($routePrefix === 'student' && ! $isStudentAndroidApp)
+                <a class="nav-link" href="{{ route('student.application.download') }}" download>
+                    <i class="bi bi-android2"></i> Download Application
+                </a>
+            @endif
+        </div>
 
         <div class="sidebar-account-group">
             <div class="nav-section">Account</div>

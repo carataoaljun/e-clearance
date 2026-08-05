@@ -18,7 +18,7 @@ class AdminAuthController extends Controller
     {
         $credentials = $request->validate([
             'email' => ['required', 'email', 'max:100'],
-            'password' => ['required', 'string', 'min:8', 'max:128'],
+            'password' => ['required', 'string', 'max:128'],
         ]);
 
         if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {

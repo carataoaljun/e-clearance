@@ -40,7 +40,7 @@ class AdminPersonnelController extends Controller
             'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:admin_personnel,email'],
-            'password' => ['nullable', 'string', 'max:128', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'office' => ['nullable', 'string', 'max:100'],
             'role' => ['required', Rule::in(array_keys(AdminPersonnel::$validRoles))],
         ], [
@@ -63,7 +63,7 @@ class AdminPersonnelController extends Controller
             'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('admin_personnel', 'email')->ignore($id)],
-            'password' => ['nullable', 'string', 'max:128', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'office' => ['nullable', 'string', 'max:100'],
             'role' => ['required', Rule::in(array_keys(AdminPersonnel::$validRoles))],
         ], [

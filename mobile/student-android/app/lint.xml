@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- Local WAMP access is intentionally HTTP-capable only in the debuggable build. -->
+    <issue id="InsecureBaseConfiguration">
+        <ignore path="src/debug/res/xml/network_security_config_debug.xml" />
+    </issue>
+</lint>

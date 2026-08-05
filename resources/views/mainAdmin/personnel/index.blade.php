@@ -81,8 +81,9 @@
                 </div>
                 <div class="form-row">
                     <div class="fg"><label>Email</label><input type="email" name="email" required></div>
-                    <div class="fg"><label>Password <small>(optional)</small></label><input type="password" name="password" autocomplete="new-password" placeholder="Leave blank to auto-generate"></div>
+                    <div class="fg"><label>Password <small>(optional)</small></label><input type="password" name="password" id="add_password" autocomplete="new-password" placeholder="Leave blank to auto-generate"></div>
                 </div>
+                <div class="fg"><label>Confirm Password</label><input type="password" name="password_confirmation" id="add_password_confirmation" autocomplete="new-password" placeholder="Re-enter the password"></div>
                 <div class="form-row">
                     <div class="fg"><label>Office</label><input type="text" name="office"></div>
                     <div class="fg"><label>Role</label>
@@ -115,8 +116,9 @@
                 </div>
                 <div class="form-row">
                     <div class="fg"><label>Email</label><input type="email" name="email" id="e_email" required></div>
-                    <div class="fg"><label>Password <small>(leave blank to keep)</small></label><input type="password" name="password" id="e_password" autocomplete="new-password"></div>
+                    <div class="fg"><label>New Password <small>(leave blank to keep)</small></label><input type="password" name="password" id="e_password" autocomplete="new-password"></div>
                 </div>
+                <div class="fg"><label>Confirm New Password</label><input type="password" name="password_confirmation" id="e_password_confirmation" autocomplete="new-password" placeholder="Re-enter the new password"></div>
                 <div class="form-row">
                     <div class="fg"><label>Office</label><input type="text" name="office" id="e_office"></div>
                     <div class="fg"><label>Role</label>
@@ -138,6 +140,8 @@
 @push('scripts')
 <script>
 function openAddModal() {
+    document.getElementById('add_password').value = '';
+    document.getElementById('add_password_confirmation').value = '';
     document.getElementById('addModal').classList.add('show');
 }
 function closeAddModal() {
@@ -152,6 +156,7 @@ function openEdit(person) {
     document.getElementById('e_office').value = person.office || '';
     document.getElementById('e_role').value = person.role || '';
     document.getElementById('e_password').value = '';
+    document.getElementById('e_password_confirmation').value = '';
     document.getElementById('editModal').classList.add('show');
 }
 function closeEditModal() {

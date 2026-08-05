@@ -48,7 +48,7 @@ class InstructorController extends Controller
             'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'suffix' => ['nullable', 'string', 'max:10', 'regex:/^[\pL\pN.\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:instructor_account,email'],
-            'password' => ['nullable', 'string', 'max:128', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'department' => 'required|in:BSIT,BSED,BEED,BSBA,BSHM',
         ], [
             'instructor_id.unique' => 'This employee ID is already in use.',
@@ -70,7 +70,7 @@ class InstructorController extends Controller
             'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
             'suffix' => ['nullable', 'string', 'max:10', 'regex:/^[\pL\pN.\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('instructor_account', 'email')->ignore($inst->id)],
-            'password' => ['nullable', 'string', 'max:128', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'department' => 'required|in:BSIT,BSED,BEED,BSBA,BSHM',
         ], [
             'email.unique' => 'This email address is already in use.',
