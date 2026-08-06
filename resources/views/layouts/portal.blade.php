@@ -298,7 +298,7 @@
         <div class="sidebar-nav-links">
             @yield('nav')
             @if($routePrefix === 'student' && ! $isStudentAndroidApp)
-                <a class="nav-link" href="{{ route('student.application.download') }}" download>
+                <a class="nav-link" href="{{ asset('downloads/MCC-e-Clearance-Student.apk') }}">
                     <i class="bi bi-android2"></i> Download Application
                 </a>
             @endif

@@ -8,6 +8,14 @@ use Tests\TestCase;
 
 class StudentApplicationDownloadTest extends TestCase
 {
+    public function test_application_download_defaults_to_the_public_downloads_directory(): void
+    {
+        $this->assertSame(
+            public_path('downloads/MCC-e-Clearance-Student.apk'),
+            config('student_application.apk_path'),
+        );
+    }
+
     public function test_student_sidebar_contains_the_application_download_button_in_a_browser(): void
     {
         $this->registerStudentSidebarTestRoute();
@@ -15,7 +23,7 @@ class StudentApplicationDownloadTest extends TestCase
         $this->withHeader('User-Agent', 'Mozilla/5.0 Chrome/127.0 Mobile')
             ->get('/_tests/student-application-sidebar')
             ->assertOk()
-            ->assertSee(route('student.application.download'), false)
+            ->assertSee(asset('downloads/MCC-e-Clearance-Student.apk'), false)
             ->assertSee('Download Application');
     }
 
