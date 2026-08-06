@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="48dp"
-    android:height="48dp"
-    android:viewportWidth="48"
-    android:viewportHeight="48">
-    <path android:fillColor="#FFFFFF" android:pathData="M24,0a24,24 0,1 0,0 48a24,24 0,1 0,0 -48" />
-    <path android:fillColor="#087CF2" android:pathData="M10,9h11v30H10zM27,9h11v11H27zM27,27h11v12H27z" />
-</vector>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/mcc_white" />
+    <item
+        android:left="4dp"
+        android:top="4dp"
+        android:right="4dp"
+        android:bottom="4dp"
+        android:drawable="@drawable/mcc_eclearance_logo" />
+</layer-list>

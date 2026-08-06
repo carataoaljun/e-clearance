@@ -5,6 +5,7 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@color/mcc_navy</item>
         <item name="android:navigationBarColor">@color/mcc_surface</item>
+        <item name="android:windowBackground">@drawable/app_splash</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:colorAccent">@color/mcc_blue</item>
     </style>

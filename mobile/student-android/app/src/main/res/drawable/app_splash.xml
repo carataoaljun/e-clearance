@@ -2,9 +2,8 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/mcc_white" />
     <item
-        android:left="4dp"
-        android:top="4dp"
-        android:right="4dp"
-        android:bottom="4dp"
-        android:drawable="@drawable/mcc_eclearance_logo" />
+        android:width="220dp"
+        android:height="220dp"
+        android:drawable="@drawable/mcc_eclearance_logo"
+        android:gravity="center" />
 </layer-list>

@@ -101,7 +101,7 @@ public final class MainActivity extends Activity {
         ));
 
         ImageView mark = new ImageView(this);
-        mark.setImageResource(R.drawable.ic_mcc_mark);
+        mark.setImageResource(R.drawable.mcc_eclearance_logo);
         mark.setContentDescription(getString(R.string.app_name));
         toolbar.addView(mark, new LinearLayout.LayoutParams(dp(36), dp(36)));
 
@@ -182,8 +182,8 @@ public final class MainActivity extends Activity {
         panel.setBackgroundColor(getColor(R.color.mcc_surface));
 
         ImageView icon = new ImageView(this);
-        icon.setImageResource(R.drawable.ic_mcc_mark);
-        panel.addView(icon, new LinearLayout.LayoutParams(dp(58), dp(58)));
+        icon.setImageResource(R.drawable.mcc_eclearance_logo);
+        panel.addView(icon, new LinearLayout.LayoutParams(dp(86), dp(86)));
 
         TextView heading = new TextView(this);
         heading.setText(R.string.connection_error_title);
