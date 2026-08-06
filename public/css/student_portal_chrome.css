@@ -7,9 +7,20 @@ body.student-portal-theme {
     --student-ink: #18304d;
     --student-muted: #6b7f95;
     --student-line: rgba(151, 192, 220, .48);
+    --portal-viewport-height: 100vh;
+    --portal-header-height: 79px;
+    width: 100%;
+    max-width: 100%;
     margin: 0;
     padding: 0 !important;
+    box-sizing: border-box;
     overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+    body.student-portal-theme {
+        --portal-viewport-height: 100dvh;
+    }
 }
 
 body.student-portal-theme .topbar {
@@ -140,18 +151,22 @@ body.student-portal-theme .topbar-right #notifBtn {
 body.student-portal-theme .topbar-right #notifBtn > i { font-size: 1rem !important; }
 
 body.student-portal-theme .main {
-    height: calc(100vh - 79px);
-    min-height: calc(100vh - 79px);
-    max-height: calc(100vh - 79px);
+    min-width: 0;
+    max-width: 100%;
+    height: calc(var(--portal-viewport-height) - var(--portal-header-height));
+    min-height: calc(var(--portal-viewport-height) - var(--portal-header-height));
+    max-height: calc(var(--portal-viewport-height) - var(--portal-header-height));
+    box-sizing: border-box;
 }
 body.student-portal-theme .main.sidebar-open { margin-left: 286px; }
 
 body.student-portal-theme .sidebar {
-    top: 79px !important;
+    top: var(--portal-header-height) !important;
     bottom: 0;
     width: 286px;
+    max-width: 100%;
     min-height: 0;
-    height: calc(100vh - 79px);
+    height: calc(var(--portal-viewport-height) - var(--portal-header-height));
     box-sizing: border-box;
     padding: 0 !important;
     overflow: hidden;
@@ -169,11 +184,17 @@ body.student-portal-theme .sidebar {
 body.student-portal-theme .sidebar.open { transform: translateX(0) !important; }
 body.student-portal-theme .sidebar-inner {
     display: flex;
+    width: 100%;
+    max-width: 100%;
     height: 100%;
     min-height: 0;
     flex-direction: column;
     overflow-y: auto;
-    padding: 15px !important;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    padding: 15px 15px max(15px, env(safe-area-inset-bottom)) !important;
 }
 body.student-portal-theme .sidebar-portal-card {
     position: relative;
@@ -343,6 +364,7 @@ body.student-portal-theme .overlay.show {
 }
 
 @media (max-width: 768px) {
+    body.student-portal-theme { --portal-header-height: 67px; }
     body.student-portal-theme .topbar { height: 67px; min-height: 67px; padding: 8px 10px; }
     body.student-portal-theme .student-brand-lockup { gap: 7px; }
     body.student-portal-theme .student-brand-lockup .menu-btn { width: 40px; height: 40px; border-radius: 12px; }
@@ -354,22 +376,7 @@ body.student-portal-theme .overlay.show {
     body.student-portal-theme .topbar-right .user-name { max-width: 145px; font-size: .69rem; }
     body.student-portal-theme .topbar-right .user-role { max-width: 155px; font-size: .54rem !important; }
     body.student-portal-theme .topbar-right #notifBtn { width: 42px; min-width: 42px; height: 42px; min-height: 42px; }
-    body.student-portal-theme .main { height: calc(100vh - 67px); min-height: calc(100vh - 67px); max-height: calc(100vh - 67px); }
-    body.student-portal-theme .sidebar { top: 67px !important; width: min(300px, calc(100% - 18px)); height: calc(100vh - 67px); border-radius: 0 20px 20px 0; }
-}
-
-@supports (height: 100dvh) {
-    @media (max-width: 768px) {
-        body.student-portal-theme .main {
-            height: calc(100dvh - 67px);
-            min-height: calc(100dvh - 67px);
-            max-height: calc(100dvh - 67px);
-        }
-
-        body.student-portal-theme .sidebar {
-            height: calc(100dvh - 67px);
-        }
-    }
+    body.student-portal-theme .sidebar { width: min(300px, calc(100% - 18px)); border-radius: 0 20px 20px 0; }
 }
 
 @media (max-width: 992px) {
