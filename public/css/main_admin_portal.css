@@ -762,6 +762,12 @@ body.main-admin-portal .form-label {
         -webkit-overflow-scrolling: touch;
     }
 
+    body.main-admin-portal .sidebar-account-group {
+        flex: 0 0 auto;
+        margin-top: 6px;
+        padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+        background: transparent;
+    }
 }
 
 @media (max-width: 600px) {

@@ -163,11 +163,12 @@
             <div class="nav-section">Communication</div>
             <a href="{{ route('chat.index') }}" class="nav-link {{ request()->routeIs('chat*') ? 'active' : '' }}"><i class="bi bi-chat-square-text"></i> Chat Support</a>
             <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications*') ? 'active' : '' }}"><i class="bi bi-bell"></i> Notifications</a>
-            <div class="sidebar-account-group">
-                <div class="nav-section">Account</div>
-                <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"><i class="bi bi-person-gear"></i> Account Settings</a>
-                <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="sidebar-action"><i class="bi bi-box-arrow-right"></i> Log Out</button></form>
-            </div>
+        </div>
+
+        <div class="sidebar-account-group">
+            <div class="nav-section">Account</div>
+            <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"><i class="bi bi-person-gear"></i> Account Settings</a>
+            <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="sidebar-action"><i class="bi bi-box-arrow-right"></i> Log Out</button></form>
         </div>
     </div>
 </div>
