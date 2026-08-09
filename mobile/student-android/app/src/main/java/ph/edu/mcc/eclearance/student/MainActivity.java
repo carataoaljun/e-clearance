@@ -53,6 +53,7 @@ import java.util.Locale;
 public final class MainActivity extends Activity {
     private static final String PREFERENCES = "mcc_student_app";
     private static final String SERVER_ROOT_KEY = "server_root";
+    private static final String LEGACY_EMULATOR_SERVER_ROOT = "http://10.0.2.2/e-clearance/public";
     private static final String SAVED_WEBVIEW_STATE = "student_webview_state";
     private static final int FILE_CHOOSER_REQUEST = 4101;
     private static final int STORAGE_PERMISSION_REQUEST = 4102;
@@ -74,7 +75,7 @@ public final class MainActivity extends Activity {
         getWindow().setNavigationBarColor(getColor(R.color.mcc_surface));
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
 
-        serverRoot = preferences().getString(SERVER_ROOT_KEY, getString(R.string.default_server_root));
+        serverRoot = resolveServerRoot();
         setContentView(createScreen());
         configureWebView();
         registerPredictiveBackCallback();
@@ -244,7 +245,7 @@ public final class MainActivity extends Activity {
         settings.setMediaPlaybackRequiresUserGesture(true);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MCCStudentAndroid/1.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " MCCStudentAndroid/" + BuildConfig.VERSION_NAME);
         WebView.setWebContentsDebuggingEnabled(isDebuggable());
         settings.setSafeBrowsingEnabled(true);
 
@@ -284,8 +285,8 @@ public final class MainActivity extends Activity {
 
         TextView help = new TextView(this);
         help.setText(isDebuggable()
-            ? "Emulator default: http://10.0.2.2/e-clearance/public\nPhysical phone: use your computer's LAN IP."
-            : "A release build requires an HTTPS address for the deployed Laravel system.");
+            ? "Online default: https://mcceclearance.com\nUse a local address only when developing with WAMP."
+            : "The production student portal uses a secure HTTPS address.");
         help.setTextColor(Color.rgb(100, 120, 140));
         help.setTextSize(11);
         help.setPadding(0, dp(8), 0, 0);
@@ -429,6 +430,21 @@ public final class MainActivity extends Activity {
 
     private SharedPreferences preferences() {
         return getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+    }
+
+    private String resolveServerRoot() {
+        SharedPreferences preferences = preferences();
+        String defaultRoot = getString(R.string.default_server_root);
+        String savedRoot = preferences.getString(SERVER_ROOT_KEY, defaultRoot);
+
+        // Version 1.0 debug builds saved the emulator-only WAMP address. Move
+        // those installations to the live service when they update.
+        if (LEGACY_EMULATOR_SERVER_ROOT.equals(savedRoot)) {
+            preferences.edit().putString(SERVER_ROOT_KEY, defaultRoot).apply();
+            return defaultRoot;
+        }
+
+        return savedRoot == null || savedRoot.isBlank() ? defaultRoot : savedRoot;
     }
 
     private int dp(int value) {

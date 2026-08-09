@@ -23,7 +23,7 @@ class StudentApplicationDownloadTest extends TestCase
         $this->withHeader('User-Agent', 'Mozilla/5.0 Chrome/127.0 Mobile')
             ->get('/_tests/student-application-sidebar')
             ->assertOk()
-            ->assertSee(asset('downloads/MCC-e-Clearance-Student.apk'), false)
+            ->assertSee(route('student.application.download'), false)
             ->assertSee('Download Application');
     }
 

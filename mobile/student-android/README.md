@@ -17,6 +17,17 @@ The app uses the existing responsive Laravel student portal inside a restricted 
 - Invalid TLS certificates are rejected
 - Release builds require HTTPS
 
+## Online server
+
+Debug and release builds now connect to the live student portal by default:
+
+```text
+https://mcceclearance.com/student/login
+```
+
+Version 1.1 also migrates installations that retained the old emulator-only
+address to the live HTTPS service automatically.
+
 ## Open in Android Studio
 
 1. Start Android Studio.
@@ -33,9 +44,10 @@ The app uses the existing responsive Laravel student portal inside a restricted 
 
 The project uses Java 17, Android Gradle Plugin 9.0.1, Gradle 9.1, compile SDK 36.1, and supports Android 8.0 or newer.
 
-## Use with WAMP on the Android emulator
+## Optional local development with WAMP
 
-The debug app defaults to:
+The debug app defaults to the live website. To use WAMP on the Android
+emulator instead, tap the gear icon and enter:
 
 ```text
 http://10.0.2.2/e-clearance/public
@@ -49,7 +61,7 @@ http://10.0.2.2/e-clearance/public/student/login
 
 If your WAMP virtual host uses a different path, tap the **gear icon** in the app and enter the correct root address without `/student/login`.
 
-## Use with a physical Android phone on localhost
+### Physical Android phone on localhost
 
 `localhost` on a phone means the phone itself, so use the Windows computer's LAN address:
 
@@ -94,7 +106,7 @@ Install it on a running emulator or USB-connected phone:
 Before publishing:
 
 1. Deploy Laravel to a real HTTPS domain.
-2. Replace `https://your-clearance-domain.example` in `app/src/main/res/values/strings.xml`, or enter the deployed address from the app's gear icon.
+2. Confirm `https://mcceclearance.com` remains configured in `app/src/main/res/values/strings.xml`.
 3. Create a private Android signing key and configure release signing in `app/build.gradle.kts` without committing passwords or the keystore.
 4. Build an Android App Bundle with `gradlew.bat bundleRelease`.
 5. Test login, uploads, downloads, chat, password recovery, and logout against production.
