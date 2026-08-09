@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Tests\Support\UploadFixtures;
 use Tests\TestCase;
 
 class SubmissionRemarkFlowTest extends TestCase
@@ -166,7 +167,10 @@ class SubmissionRemarkFlowTest extends TestCase
             'instructor_id' => 'inst-1',
             'description' => 'Please review this file',
         ], [], [
-            'submission_file' => UploadedFile::fake()->create('sample.pdf', 120, 'application/pdf'),
+            'submission_file' => UploadedFile::fake()->createWithContent(
+                'sample.pdf',
+                UploadFixtures::pdf(),
+            ),
         ]);
 
         $controller = new SubmissionRemarkController;

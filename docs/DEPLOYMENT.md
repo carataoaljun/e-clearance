@@ -122,6 +122,22 @@ storage/
 bootstrap/cache/
 ```
 
+Uploaded clearance documents must remain under `storage/app/private`; never
+place them in `public/` or expose them through the storage symlink. Before
+launching or after upgrading an older deployment, run:
+
+```bash
+php artisan system:migrate-private-uploads --dry-run
+php artisan system:migrate-private-uploads
+```
+
+Keep `UPLOAD_ALLOW_LEGACY_PUBLIC_FILES=false`. The production PHP runtime must
+provide Fileinfo and GD: Fileinfo detects content MIME types, while GD decodes
+and re-encodes JPG/PNG uploads and signature images. The application rejects
+active/encrypted PDF features, non-canonical image payloads, unsafe legacy
+files, and unsupported content during production preflight. Retain the hosting
+provider's malware scanner as an additional layer when it is available.
+
 Do not grant the web-server account write access to application source,
 configuration, or `.env`. Do not create `public/storage` for student documents
 that require authorization. A storage link is appropriate only for deliberately

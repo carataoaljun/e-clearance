@@ -88,7 +88,7 @@ class ImportCsvController extends Controller
     {
         $validated = $request->validate([
             'type' => ['required', Rule::in(array_keys(self::HEADERS))],
-            'csv_file' => ['required', 'file', 'extensions:csv,txt', 'max:5120'],
+            'csv_file' => ['required', 'file', 'extensions:csv', 'max:5120'],
         ]);
 
         $type = $validated['type'];
@@ -539,7 +539,8 @@ class ImportCsvController extends Controller
                 ]);
             }
 
-            if (str_contains($contents, "\0") || preg_match('//u', $contents) !== 1) {
+            if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $contents) === 1
+                || preg_match('//u', $contents) !== 1) {
                 throw ValidationException::withMessages([
                     'csv_file' => 'The CSV must contain valid UTF-8 plain text.',
                 ]);

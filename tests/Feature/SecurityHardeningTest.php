@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ClearanceVerificationToken;
+use App\Models\Esignature;
 use App\Models\Instructor;
 use App\Models\Registrar;
 use App\Models\SecurityAuditLog;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use ReflectionProperty;
+use Tests\Support\UploadFixtures;
 use Tests\TestCase;
 
 class SecurityHardeningTest extends TestCase
@@ -91,10 +93,9 @@ class SecurityHardeningTest extends TestCase
             'subject_id' => $subjectId,
             'instructor_id' => $instructor->instructor_id,
             'description' => 'Valid private supporting document.',
-            'submission_file' => UploadedFile::fake()->create(
+            'submission_file' => UploadedFile::fake()->createWithContent(
                 'clearance-proof.pdf',
-                64,
-                'application/pdf'
+                UploadFixtures::pdf(),
             ),
         ])->assertRedirect();
 
@@ -124,6 +125,26 @@ class SecurityHardeningTest extends TestCase
         $this->actingAs($otherInstructor, 'instructor')
             ->get(route('instructor.submissions.download', $submission))
             ->assertForbidden();
+    }
+
+    public function test_signature_images_are_reencoded_before_they_are_saved(): void
+    {
+        $instructor = $this->createInstructor('INS-SIGNATURE-001');
+        $payload = '<?php echo "signature-payload";';
+        $dataUri = 'data:image/png;base64,'.base64_encode(UploadFixtures::png().$payload);
+
+        $this->actingAs($instructor, 'instructor')
+            ->postJson(route('esignature.save'), ['signature_data' => $dataUri])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $storedData = Esignature::query()->sole()->signature_data;
+        $storedBinary = base64_decode(substr($storedData, strlen('data:image/png;base64,')), true);
+
+        $this->assertIsString($storedBinary);
+        $this->assertStringNotContainsString($payload, $storedBinary);
+        $this->assertStringStartsWith("\x89PNG\r\n\x1A\n", $storedBinary);
+        $this->assertStringEndsWith("\x00\x00\x00\x00IEND\xAE\x42\x60\x82", $storedBinary);
     }
 
     public function test_responses_include_browser_security_headers(): void

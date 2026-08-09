@@ -190,7 +190,7 @@ Route::middleware('admin.auth')
         Route::delete('/treasurers/{id}', [TreasurerController::class, 'destroy'])->name('treasurers.destroy');
 
         // CSV Import
-        Route::post('/import-csv', [ImportCsvController::class, 'import'])->name('import.csv');
+        Route::post('/import-csv', [ImportCsvController::class, 'import'])->middleware('throttle:uploads')->name('import.csv');
     });
 
 /*

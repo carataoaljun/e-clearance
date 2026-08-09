@@ -26,7 +26,8 @@ final class SubmissionFileResponse
             $expectedMime !== null
             && $metadataMime === $expectedMime
             && $detectedMime === $expectedMime
-            && ($storedMime === '' || $storedMime === 'application/octet-stream' || $storedMime === $expectedMime),
+            && ($storedMime === '' || $storedMime === 'application/octet-stream' || $storedMime === $expectedMime)
+            && SecureUpload::storedFileIsSafe($disk, $filePath, $expectedMime),
             415
         );
 
@@ -58,7 +59,13 @@ final class SubmissionFileResponse
 
     private static function resolveDisk(string $filePath)
     {
-        foreach (['local', 'public'] as $diskName) {
+        $diskNames = ['local'];
+
+        if (config('uploads.allow_legacy_public_files') === true) {
+            $diskNames[] = 'public';
+        }
+
+        foreach ($diskNames as $diskName) {
             $disk = Storage::disk($diskName);
 
             if ($disk->exists($filePath)) {

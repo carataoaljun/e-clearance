@@ -61,6 +61,21 @@ class ImportCsvControllerTest extends TestCase
         $this->assertDatabaseCount('registrar', 0);
     }
 
+    public function test_import_rejects_control_characters_and_non_csv_extensions(): void
+    {
+        $csv = "firstname,lastname,email,password\nAna,Reyes,a@example.test,Strong\x01Pass1!";
+
+        $this->postImport('registrar', $csv)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('csv_file');
+
+        $this->postImport('registrar', str_replace("\x01", '', $csv), 'import.txt')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('csv_file');
+
+        $this->assertDatabaseCount('registrar', 0);
+    }
+
     public function test_row_limit_is_enforced_before_any_account_is_created(): void
     {
         $rows = ['firstname,lastname,email,password'];
@@ -75,16 +90,24 @@ class ImportCsvControllerTest extends TestCase
         $this->assertDatabaseCount('registrar', 0);
     }
 
-    private function postImport(string $type, string $contents)
+    private function postImport(string $type, string $contents, string $fileName = 'import.csv')
     {
-        $admin = MainAdmin::find(DB::table('main_admin')->insertGetId([
-            'email' => 'csv-admin@example.test',
-            'password' => Hash::make('StrongAdminPassword1!'),
-        ]));
+        $adminId = DB::table('main_admin')
+            ->where('email', 'csv-admin@example.test')
+            ->value('id');
+
+        if ($adminId === null) {
+            $adminId = DB::table('main_admin')->insertGetId([
+                'email' => 'csv-admin@example.test',
+                'password' => Hash::make('StrongAdminPassword1!'),
+            ]);
+        }
+
+        $admin = MainAdmin::findOrFail($adminId);
 
         return $this->actingAs($admin, 'admin')->postJson(route('import.csv'), [
             'type' => $type,
-            'csv_file' => UploadedFile::fake()->createWithContent('import.csv', $contents),
+            'csv_file' => UploadedFile::fake()->createWithContent($fileName, $contents),
         ]);
     }
 }

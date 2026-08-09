@@ -12,6 +12,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -62,6 +63,21 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(5)->by(Str::lower((string) $request->input('email')).'|'.$request->ip()),
             Limit::perHour(15)->by('password-reset|'.$request->ip()),
         ]);
+
+        RateLimiter::for('uploads', function (Request $request) {
+            $authenticatedIdentity = collect(['student', 'admin', 'instructor', 'registrar'])
+                ->first(function (string $guard): bool {
+                    return Auth::guard($guard)->check();
+                });
+            $userKey = $authenticatedIdentity !== null
+                ? $authenticatedIdentity.'|'.Auth::guard($authenticatedIdentity)->id()
+                : 'session|'.$request->session()->getId();
+
+            return [
+                Limit::perMinute(10)->by('uploads|'.$userKey),
+                Limit::perHour(40)->by('uploads-ip|'.$request->ip()),
+            ];
+        });
 
         Event::listen(Login::class, fn (Login $event) => AuditLogger::record(
             'authentication.login',

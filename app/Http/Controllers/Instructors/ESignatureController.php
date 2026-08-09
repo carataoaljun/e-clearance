@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Instructors;
 
 use App\Http\Controllers\Controller;
 use App\Models\Esignature;
+use App\Support\SecureUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 
 class ESignatureController extends Controller
 {
@@ -57,24 +57,7 @@ class ESignatureController extends Controller
             'signature_data' => ['required', 'string', 'starts_with:data:image/png;base64,', 'max:300000'],
         ]);
 
-        $prefix = 'data:image/png;base64,';
-        $binary = base64_decode(substr($data['signature_data'], strlen($prefix)), true);
-        $image = $binary === false ? false : @getimagesizefromstring($binary);
-
-        if ($binary === false
-            || strlen($binary) > 200 * 1024
-            || $image === false
-            || ($image[2] ?? null) !== IMAGETYPE_PNG
-            || ($image[0] ?? 0) < 1
-            || ($image[1] ?? 0) < 1
-            || ($image[0] ?? 0) > 2000
-            || ($image[1] ?? 0) > 1000) {
-            throw ValidationException::withMessages([
-                'signature_data' => 'The signature must be a valid PNG image no larger than 200 KB or 2000 by 1000 pixels.',
-            ]);
-        }
-
-        $signatureData = $prefix.base64_encode($binary);
+        $signatureData = SecureUpload::normalizePngDataUri($data['signature_data']);
 
         Esignature::updateOrCreate(
             ['signer_id' => $signer['id'], 'signer_role' => $signer['role']],

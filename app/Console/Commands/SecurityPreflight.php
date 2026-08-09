@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Support\SecureUpload;
 use DateTimeZone;
 use Illuminate\Console\Command;
 use Illuminate\Encryption\Encrypter;
+use Illuminate\Support\Facades\Storage;
 use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
 
 class SecurityPreflight extends Command
@@ -78,6 +80,16 @@ class SecurityPreflight extends Command
             config('app.debug') === false,
             'Application debug mode is disabled.',
             'APP_DEBUG must be false.',
+        );
+        $this->assert(
+            extension_loaded('fileinfo'),
+            'The Fileinfo extension is available for server-side MIME detection.',
+            'The PHP Fileinfo extension is required for secure upload MIME detection.',
+        );
+        $this->assert(
+            extension_loaded('gd'),
+            'The GD extension is available for image decoding and re-encoding.',
+            'The PHP GD extension is required to sanitize uploaded images and signatures.',
         );
         $this->assert(
             config('security.force_https') === true,
@@ -307,6 +319,29 @@ class SecurityPreflight extends Command
             'No .env file exists inside public/.',
             'A .env file exists inside public/ and must be removed immediately.',
         );
+        $this->assert(
+            config('uploads.allow_legacy_public_files') === false,
+            'Legacy public-upload fallback is disabled.',
+            'UPLOAD_ALLOW_LEGACY_PUBLIC_FILES must be false after migrating legacy uploads.',
+        );
+
+        $legacyPublicUploads = collect(['student_submissions', 'office_submissions'])
+            ->flatMap(fn (string $directory) => Storage::disk('public')->allFiles($directory))
+            ->unique()
+            ->values()
+            ->all();
+        $this->assert(
+            $legacyPublicUploads === [],
+            'No clearance submissions remain on the public filesystem disk.',
+            'Legacy clearance submissions remain public: '.implode(', ', array_slice($legacyPublicUploads, 0, 10)).'. Run system:migrate-private-uploads.',
+        );
+
+        $unsafePrivateUploads = $this->unsafePrivateUploads();
+        $this->assert(
+            $unsafePrivateUploads === [],
+            'Existing private clearance uploads pass content and type inspection.',
+            'Unsafe or unsupported files exist in private upload storage: '.implode(', ', array_slice($unsafePrivateUploads, 0, 10)).'. Quarantine and investigate them.',
+        );
 
         $unexpectedPhpFiles = $this->unexpectedPublicPhpFiles();
         $this->assert(
@@ -432,6 +467,38 @@ class SecurityPreflight extends Command
         sort($unexpected, SORT_STRING);
 
         return $unexpected;
+    }
+
+    /** @return array<int, string> */
+    private function unsafePrivateUploads(): array
+    {
+        $disk = Storage::disk('local');
+        $paths = collect(['student_submissions', 'office_submissions'])
+            ->flatMap(fn (string $directory) => $disk->allFiles($directory))
+            ->unique()
+            ->values();
+        $unsafe = [];
+
+        foreach ($paths as $path) {
+            try {
+                $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                $expectedMime = SecureUpload::mimeForExtension($extension);
+                $detectedMime = SecureUpload::normalizeMime((string) ($disk->mimeType($path) ?: ''));
+            } catch (\Throwable) {
+                $expectedMime = null;
+                $detectedMime = '';
+            }
+
+            if ($expectedMime === null
+                || $detectedMime !== $expectedMime
+                || ! SecureUpload::storedFileIsSafe($disk, $path, $expectedMime)) {
+                $unsafe[] = $path;
+            }
+        }
+
+        sort($unsafe, SORT_STRING);
+
+        return $unsafe;
     }
 
     private function pathIsWithin(string $path, string $parent): bool

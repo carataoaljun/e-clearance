@@ -375,7 +375,7 @@
                                 @csrf
                                 <input type="hidden" name="office_role" value="{{ $office['key'] }}">
                                 <label class="small fw-semibold" for="office-file-{{ $loop->index }}">{{ $submission ? 'Send another document' : 'Send a document' }}</label>
-                                <input id="office-file-{{ $loop->index }}" type="file" name="submission_file" class="form-control form-control-sm" required>
+                                <input id="office-file-{{ $loop->index }}" type="file" name="submission_file" accept=".pdf,.jpg,.jpeg,.png" class="form-control form-control-sm" required>
                                 <input type="text" name="description" class="form-control form-control-sm" placeholder="Optional note about this document">
                                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-upload me-1"></i>Upload document</button>
                             </form>

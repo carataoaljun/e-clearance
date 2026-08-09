@@ -46,6 +46,6 @@ Route::middleware('instructor.auth')->prefix('instructor')->name('instructor.')-
 // ── Shared e-signature endpoint (instructor, admin, registrar all use this guard-agnostic controller) ──
 Route::middleware('auth:instructor,admin,registrar')->group(function () {
     Route::get('esignature', [ESignatureController::class, 'get'])->name('esignature.get');
-    Route::post('esignature', [ESignatureController::class, 'save'])->name('esignature.save');
+    Route::post('esignature', [ESignatureController::class, 'save'])->middleware('throttle:uploads')->name('esignature.save');
     Route::delete('esignature', [ESignatureController::class, 'delete'])->name('esignature.delete');
 });

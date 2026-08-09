@@ -39,6 +39,24 @@ class MigratePrivateUploads extends Command
                 continue;
             }
 
+            try {
+                $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                $expectedMime = SecureUpload::mimeForExtension($extension);
+                $detectedMime = SecureUpload::normalizeMime((string) ($public->mimeType($path) ?: ''));
+            } catch (Throwable) {
+                $expectedMime = null;
+                $detectedMime = '';
+            }
+
+            if ($expectedMime === null
+                || $detectedMime !== $expectedMime
+                || ! SecureUpload::storedFileIsSafe($public, $path, $expectedMime)) {
+                $this->error("Skipped unsafe or unsupported upload: {$path}");
+                $skipped++;
+
+                continue;
+            }
+
             if ($this->option('dry-run')) {
                 $this->line("Would move: {$path}");
 
@@ -87,7 +105,7 @@ class MigratePrivateUploads extends Command
         if ($this->option('dry-run')) {
             $this->info("Dry run complete: {$paths->count()} file(s) found.");
 
-            return self::SUCCESS;
+            return $skipped === 0 ? self::SUCCESS : self::FAILURE;
         }
 
         $this->info("Migration complete: {$moved} moved, {$skipped} skipped.");

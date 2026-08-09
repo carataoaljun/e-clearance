@@ -42,10 +42,10 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::get('clearance-updates', [ClearanceUpdatesController::class, 'index'])->name('clearance-updates');
         Route::post('clearance/submit-instructor', [ClearanceUpdatesController::class, 'submitInstructor'])->name('clearance.submit-instructor');
         Route::post('clearance/submit-office', [ClearanceUpdatesController::class, 'submitOffice'])->name('clearance.submit-office');
-        Route::post('clearance/upload-office', [ClearanceUpdatesController::class, 'uploadOfficeSubmission'])->name('clearance.upload-office');
+        Route::post('clearance/upload-office', [ClearanceUpdatesController::class, 'uploadOfficeSubmission'])->middleware('throttle:uploads')->name('clearance.upload-office');
         Route::get('clearance/office-submission/{submission}', [ClearanceUpdatesController::class, 'viewOfficeSubmission'])->whereNumber('submission')->name('clearance.office-submission');
         Route::get('submission-remark', [SubmissionRemarkController::class, 'index'])->name('submission-remark');
-        Route::post('submission-remark/upload', [SubmissionRemarkController::class, 'upload'])->name('submission-remark.upload');
+        Route::post('submission-remark/upload', [SubmissionRemarkController::class, 'upload'])->middleware('throttle:uploads')->name('submission-remark.upload');
         Route::get('submission-remark/download/{submission}', [SubmissionRemarkController::class, 'download'])->name('submission-remark.download');
         Route::get('chat-support', [ChatSupportController::class, 'index'])->name('chat-support');
         Route::get('chat-support/messages', [ChatSupportController::class, 'messages'])->name('chat.messages');

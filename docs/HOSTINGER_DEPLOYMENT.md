@@ -96,3 +96,13 @@ scripts, and `.user.ini` disables browser error display as defense in depth.
 After deploying, verify that `/info.php`, `/phpinfo.php`, and
 `/public/info.php` return 404. PHP may cache `.user.ini` changes for several
 minutes, but the `.htaccess` denial should take effect immediately.
+
+### Harden and migrate uploads
+
+Enable PHP's Fileinfo and GD extensions in hPanel. Keep
+`UPLOAD_ALLOW_LEGACY_PUBLIC_FILES=false`, then use the Hostinger terminal to
+run `php artisan system:migrate-private-uploads --dry-run` followed by
+`php artisan system:migrate-private-uploads`. Investigate every file the command
+rejects instead of moving it into private storage. Finally run the production
+security preflight; it fails when uploads remain public or existing private
+files have an unsupported extension, mismatched MIME type, or unsafe content.

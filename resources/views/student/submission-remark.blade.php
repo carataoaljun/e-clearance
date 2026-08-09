@@ -45,7 +45,7 @@
             <form class="submission-review-form" method="POST" action="{{ route('student.submission-remark.upload') }}" enctype="multipart/form-data">
                 @csrf<input type="hidden" name="subject_id" value="{{ $submission->subject_id }}"><input type="hidden" name="instructor_id" value="{{ $submission->instructor_id }}">
                 <label class="submission-meta-label">{{ $submission->submission_id ? 'Replace Submission' : 'Upload Submission' }}</label>
-                <input type="file" name="submission_file" required><input type="text" name="description" maxlength="1000" placeholder="Optional note for your instructor">
+                <input type="file" name="submission_file" accept=".pdf,.jpg,.jpeg,.png" required><input type="text" name="description" maxlength="1000" placeholder="Optional note for your instructor">
                 <div class="submission-actions"><button class="clearance-filter-btn apply" type="submit"><i class="bi bi-send"></i>{{ $submission->submission_id ? 'Send Replacement' : 'Send to Instructor' }}</button></div>
             </form>
         </article>
