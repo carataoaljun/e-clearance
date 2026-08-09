@@ -161,6 +161,9 @@
         .login-button { display: flex; width: 100%; min-height: 56px; align-items: center; justify-content: center; gap: 11px; color: #fff; border: 0; border-radius: 15px; background: linear-gradient(135deg, #079cff, #075bea 64%, #1546dc); box-shadow: 0 12px 24px rgba(7,91,234,.26); font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform .2s, box-shadow .2s; }
         .login-button:hover { transform: translateY(-2px); box-shadow: 0 16px 28px rgba(7,91,234,.31); }
         .login-button:active { transform: translateY(0); }
+        .landing-button { display:flex; width:100%; min-height:48px; margin-top:11px; align-items:center; justify-content:center; gap:8px; color:#254f83; border:1px solid rgba(86,135,192,.28); border-radius:14px; background:rgba(246,251,255,.68); font-size:.94rem; font-weight:700; text-decoration:none; transition:transform .2s, border-color .2s, background .2s, box-shadow .2s; }
+        .landing-button:hover { color:var(--blue); border-color:rgba(7,91,234,.32); background:#fff; box-shadow:0 8px 18px rgba(41,98,159,.09); transform:translateY(-1px); }
+        .landing-button:focus-visible { outline:3px solid rgba(7,91,234,.22); outline-offset:2px; }
         .auth-panel[hidden] { display:none; }
         .auth-panel.panel-enter { animation:panelEnter .32s cubic-bezier(.22,1,.36,1); }
         @keyframes panelEnter { from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:translateX(0); } }
@@ -420,6 +423,7 @@
                         </div>
                         <button type="submit" class="login-button"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Log In</span></button>
                     </form>
+                    <a href="{{ route('landing') }}" class="landing-button"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>Back to Landing Page</span></a>
                 </div>
 
                 <div class="auth-panel" id="email-panel" data-panel="email" @if($activePanel !== 'email') hidden @endif>

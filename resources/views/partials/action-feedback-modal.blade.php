@@ -2,9 +2,11 @@
     $actionFeedback = session('flash');
 
     if (!is_array($actionFeedback) || empty($actionFeedback['message'])) {
-        $actionFeedback = session('success')
-            ? ['type' => 'success', 'message' => session('success')]
-            : (session('status') ? ['type' => 'success', 'message' => session('status')] : null);
+        $actionFeedback = session('login_success')
+            ? ['type' => 'success', 'title' => 'Login Successful', 'message' => session('login_success')]
+            : (session('success')
+                ? ['type' => 'success', 'message' => session('success')]
+                : (session('status') ? ['type' => 'success', 'message' => session('status')] : null));
     }
 @endphp
 

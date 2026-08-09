@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\PostLogout;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,8 +13,10 @@ class RegistrarAuthenticate
     public function handle(Request $request, Closure $next): Response
     {
         if (! Auth::guard('registrar')->check()) {
-            return redirect()->route('registrar.login');
+            return PostLogout::guestRedirect($request, 'registrar.login');
         }
+
+        PostLogout::clear($request);
 
         return $next($request);
     }

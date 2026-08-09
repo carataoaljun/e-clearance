@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Office;
 use App\Http\Controllers\Controller;
 use App\Models\AdminPersonnel;
 use App\Support\AuditLogger;
+use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -52,7 +53,8 @@ class AuthController extends Controller
         $request->session()->forget('portal_password_recovery_office');
         $request->session()->regenerate();
 
-        return redirect()->route('office.dashboard');
+        return redirect()->route('office.dashboard')
+            ->with('login_success', 'Login successful. Welcome to the Office panel.');
     }
 
     public function logout(Request $request)
@@ -61,7 +63,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('office.login')->with('status', 'You have been logged out.');
+        return PostLogout::response($request, 'office.login');
     }
 
     private function auditFailure(string $identifier): void

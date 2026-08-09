@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('office')->name('office.')->group(function () {
     Route::get('login', [OfficeAuthController::class, 'showLogin'])->name('login');
     Route::post('login', [OfficeAuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
-    Route::post('logout', [OfficeAuthController::class, 'logout'])->middleware('office.auth')->name('logout');
+    Route::post('logout', [OfficeAuthController::class, 'logout'])->middleware('office.auth', 'no.history')->name('logout');
 
-    Route::middleware('office.auth')->group(function () {
+    Route::middleware(['office.auth', 'no.history'])->group(function () {
         Route::get('dashboard', [OfficeDashboardController::class, 'index'])->name('dashboard');
         Route::get('submissions', [OfficeDashboardController::class, 'submissions'])->name('submissions');
         Route::get('submissions/{submission}/file', [OfficeDashboardController::class, 'viewSubmissionFile'])->name('submissions.file');
@@ -37,9 +37,9 @@ Route::prefix('office')->name('office.')->group(function () {
 Route::prefix('treasurer')->name('treasurer.')->group(function () {
     Route::get('login', [TreasurerAuthController::class, 'showLogin'])->name('login');
     Route::post('login', [TreasurerAuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
-    Route::post('logout', [TreasurerAuthController::class, 'logout'])->middleware('treasurer.auth')->name('logout');
+    Route::post('logout', [TreasurerAuthController::class, 'logout'])->middleware('treasurer.auth', 'no.history')->name('logout');
 
-    Route::middleware('treasurer.auth')->group(function () {
+    Route::middleware(['treasurer.auth', 'no.history'])->group(function () {
         Route::get('dashboard', [TreasurerDashboardController::class, 'index'])->name('dashboard');
         Route::get('clearance-updates', [TreasurerDashboardController::class, 'clearanceUpdates'])->name('clearance-updates');
         Route::post('clearance/status', [TreasurerDashboardController::class, 'setClearanceStatus'])->name('clearance.status');

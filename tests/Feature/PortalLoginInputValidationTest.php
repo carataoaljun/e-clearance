@@ -25,7 +25,9 @@ class PortalLoginInputValidationTest extends TestCase
                 ->assertSee('data-validation-label=', false)
                 ->assertSee('maxlength="128"', false)
                 ->assertSee('data-password-primary', false)
-                ->assertSee('data-password-confirmation', false);
+                ->assertSee('data-password-confirmation', false)
+                ->assertSee('href="'.route('landing').'"', false)
+                ->assertSee('Back to Landing Page');
         }
     }
 
@@ -48,4 +50,3 @@ class PortalLoginInputValidationTest extends TestCase
         }
     }
 }
-

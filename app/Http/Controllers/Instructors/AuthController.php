@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructors;
 
 use App\Http\Controllers\Controller;
+use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,7 +32,8 @@ class AuthController extends Controller
             $request->session()->forget('portal_password_recovery_instructor');
             $request->session()->regenerate();
 
-            return redirect()->route('instructor.dashboard');
+            return redirect()->route('instructor.dashboard')
+                ->with('login_success', 'Login successful. Welcome to the Instructor panel.');
         }
 
         return back()
@@ -46,6 +48,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('instructor.login');
+        return PostLogout::response($request, 'instructor.login');
     }
 }

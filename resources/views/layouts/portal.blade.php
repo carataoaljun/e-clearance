@@ -635,6 +635,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 setInterval(loadNotifications, 30000);
 </script>
+<script src="{{ asset('js/protected-page-history.js') }}"></script>
+<script src="{{ asset('js/auth-feedback-modals.js') }}"></script>
 @stack('scripts')
 </body>
 </html>

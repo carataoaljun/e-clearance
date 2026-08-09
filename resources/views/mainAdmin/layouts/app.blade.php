@@ -32,5 +32,8 @@
                 {{ $slot }}
             </main>
         </div>
+        @include('partials.action-feedback-modal')
+        <script src="{{ asset('js/protected-page-history.js') }}"></script>
+        <script src="{{ asset('js/auth-feedback-modals.js') }}"></script>
     </body>
 </html>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\StudentAccount;
 use App\Support\AuditLogger;
+use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -50,7 +51,8 @@ class AuthController extends Controller
         $request->session()->forget('student_password_recovery');
         $request->session()->regenerate();
 
-        return redirect()->route('student.dashboard');
+        return redirect()->route('student.dashboard')
+            ->with('login_success', 'Login successful. Welcome to the Student panel.');
     }
 
     public function sendRecoveryCode(Request $request)
@@ -216,6 +218,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('student.login')->with('status', 'You have been logged out.');
+        return PostLogout::response($request, 'student.login');
     }
 }

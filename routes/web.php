@@ -105,7 +105,7 @@ Route::get('/dashboard', function () {
 */
 
 Route::post('/logout', [AdminAuthController::class, 'logout'])
-    ->middleware('admin.auth')
+    ->middleware('admin.auth', 'no.history')
     ->name('logout');
 
 /*
@@ -114,7 +114,7 @@ Route::post('/logout', [AdminAuthController::class, 'logout'])
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('admin.auth')
+Route::middleware(['admin.auth', 'no.history'])
     ->prefix('mainAdmin')
     ->group(function () {
 
@@ -201,7 +201,7 @@ Route::middleware('admin.auth')
 
 require __DIR__.'/instructor.php';
 require __DIR__.'/portal.php';
-Route::middleware('auth:admin,instructor,office,registrar,treasurer,student,web')->group(function () {
+Route::middleware(['auth:admin,instructor,office,registrar,treasurer,student,web', 'no.history'])->group(function () {
     Route::get('/notifications/api', [NotificationsApiController::class, 'index'])->name('notifications.api');
     Route::post('/notifications/api/read-all', [NotificationsApiController::class, 'markAllRead'])->name('notifications.api.readAll');
     Route::delete('/notifications/api/{notification}', [NotificationsApiController::class, 'destroy'])

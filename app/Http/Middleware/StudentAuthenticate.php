@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\PostLogout;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,8 +13,10 @@ class StudentAuthenticate
     public function handle(Request $request, Closure $next): Response
     {
         if (! Auth::guard('student')->check()) {
-            return redirect()->route('student.login');
+            return PostLogout::guestRedirect($request, 'student.login');
         }
+
+        PostLogout::clear($request);
 
         return $next($request);
     }

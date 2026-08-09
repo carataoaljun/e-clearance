@@ -675,6 +675,8 @@ document.addEventListener('click', function(event) {
     }
 });
 </script>
+<script src="{{ asset('js/protected-page-history.js') }}"></script>
+<script src="{{ asset('js/auth-feedback-modals.js') }}"></script>
 @stack('scripts')
 </body>
 </html>

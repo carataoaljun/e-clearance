@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Registrar;
 use App\Http\Controllers\Controller;
 use App\Models\Registrar;
 use App\Support\AuditLogger;
+use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -47,7 +48,8 @@ class AuthController extends Controller
         $request->session()->forget('portal_password_recovery_registrar');
         $request->session()->regenerate();
 
-        return redirect()->route('registrar.dashboard');
+        return redirect()->route('registrar.dashboard')
+            ->with('login_success', 'Login successful. Welcome to the Registrar panel.');
     }
 
     public function logout(Request $request)
@@ -56,6 +58,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('registrar.login')->with('status', 'You have been logged out.');
+        return PostLogout::response($request, 'registrar.login');
     }
 }

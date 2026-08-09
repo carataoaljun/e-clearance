@@ -17,7 +17,7 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
 });
 
 // ── Auth-only ──
-Route::middleware('instructor.auth')->prefix('instructor')->name('instructor.')->group(function () {
+Route::middleware(['instructor.auth', 'no.history'])->prefix('instructor')->name('instructor.')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -44,7 +44,7 @@ Route::middleware('instructor.auth')->prefix('instructor')->name('instructor.')-
 });
 
 // ── Shared e-signature endpoint (instructor, admin, registrar all use this guard-agnostic controller) ──
-Route::middleware('auth:instructor,admin,registrar')->group(function () {
+Route::middleware(['auth:instructor,admin,registrar', 'no.history'])->group(function () {
     Route::get('esignature', [ESignatureController::class, 'get'])->name('esignature.get');
     Route::post('esignature', [ESignatureController::class, 'save'])->middleware('throttle:uploads')->name('esignature.save');
     Route::delete('esignature', [ESignatureController::class, 'delete'])->name('esignature.delete');

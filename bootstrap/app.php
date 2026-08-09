@@ -5,6 +5,7 @@ use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\InstructorAuthenticate;
 use App\Http\Middleware\MainAdminAuth;
 use App\Http\Middleware\OfficeAuthenticate;
+use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\RegistrarAuthenticate;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\StudentAuthenticate;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.auth' => MainAdminAuth::class,
             'instructor.auth' => InstructorAuthenticate::class,
             'office.auth' => OfficeAuthenticate::class,
+            'no.history' => PreventBackHistory::class,
             'student.auth' => StudentAuthenticate::class,
             'registrar.auth' => RegistrarAuthenticate::class,
             'treasurer.auth' => TreasurerAuthenticate::class,

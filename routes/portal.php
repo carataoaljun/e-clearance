@@ -32,9 +32,9 @@ Route::prefix('student')->name('student.')->group(function () {
         ->middleware('throttle:password-reset')->name('password-recovery.reset');
     Route::post('password-recovery/cancel', [StudentAuthController::class, 'cancelPasswordRecovery'])
         ->name('password-recovery.cancel');
-    Route::post('logout', [StudentAuthController::class, 'logout'])->middleware('student.auth')->name('logout');
+    Route::post('logout', [StudentAuthController::class, 'logout'])->middleware('student.auth', 'no.history')->name('logout');
 
-    Route::middleware('student.auth')->group(function () {
+    Route::middleware(['student.auth', 'no.history'])->group(function () {
         Route::get('dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
         Route::get('application/download', ApplicationDownloadController::class)->name('application.download');
         Route::get('clearance-form', [ClearanceFormController::class, 'student'])->name('clearance.form');
@@ -66,9 +66,9 @@ Route::prefix('registrar')->name('registrar.')->group(function () {
     });
     Route::get('login', [RegistrarAuthController::class, 'showLogin'])->name('login');
     Route::post('login', [RegistrarAuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
-    Route::post('logout', [RegistrarAuthController::class, 'logout'])->middleware('registrar.auth')->name('logout');
+    Route::post('logout', [RegistrarAuthController::class, 'logout'])->middleware('registrar.auth', 'no.history')->name('logout');
 
-    Route::middleware('registrar.auth')->group(function () {
+    Route::middleware(['registrar.auth', 'no.history'])->group(function () {
         Route::get('dashboard', [RegistrarDashboardController::class, 'index'])->name('dashboard');
         Route::get('clearance-form/{studentId}', [ClearanceFormController::class, 'registrar'])->name('clearance.form');
         Route::get('clearance/verify/{studentId}', [ClearanceFormController::class, 'verify'])

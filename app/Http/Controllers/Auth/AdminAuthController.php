@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\MainAdmin;
+use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -32,7 +33,8 @@ class AdminAuthController extends Controller
                 'admin_email' => $admin->email,
             ]);
 
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard')
+                ->with('login_success', 'Login successful. Welcome to the Main Admin panel.');
         }
 
         return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');
@@ -44,6 +46,6 @@ class AdminAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return PostLogout::response($request, 'login');
     }
 }

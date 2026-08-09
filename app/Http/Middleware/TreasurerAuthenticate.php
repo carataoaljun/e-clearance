@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\PostLogout;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,8 +13,10 @@ class TreasurerAuthenticate
     public function handle(Request $request, Closure $next): Response
     {
         if (! Auth::guard('treasurer')->check()) {
-            return redirect()->route('treasurer.login');
+            return PostLogout::guestRedirect($request, 'treasurer.login');
         }
+
+        PostLogout::clear($request);
 
         return $next($request);
     }

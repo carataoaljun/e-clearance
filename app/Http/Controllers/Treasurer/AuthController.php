@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Treasurer;
 use App\Http\Controllers\Controller;
 use App\Models\Treasurer;
 use App\Support\AuditLogger;
+use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -51,7 +52,8 @@ class AuthController extends Controller
         $request->session()->forget('portal_password_recovery_treasurer');
         $request->session()->regenerate();
 
-        return redirect()->route('treasurer.dashboard');
+        return redirect()->route('treasurer.dashboard')
+            ->with('login_success', 'Login successful. Welcome to the Treasurer panel.');
     }
 
     public function logout(Request $request)
@@ -60,6 +62,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('treasurer.login')->with('status', 'You have been logged out.');
+        return PostLogout::response($request, 'treasurer.login');
     }
 }
