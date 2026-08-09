@@ -83,3 +83,16 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+
+### Remove diagnostic and setup scripts
+
+The only PHP file allowed inside `public_html/public` is Laravel's
+`index.php`. Delete `public_html/public/info.php`, `phpinfo.php`, database
+connection tests, account-creation helpers, and other one-off setup scripts.
+They must not remain on the production server, even when their current query
+fails. The supplied `.htaccess` files return 404 for directly requested PHP
+scripts, and `.user.ini` disables browser error display as defense in depth.
+
+After deploying, verify that `/info.php`, `/phpinfo.php`, and
+`/public/info.php` return 404. PHP may cache `.user.ini` changes for several
+minutes, but the `.htaccess` denial should take effect immediately.

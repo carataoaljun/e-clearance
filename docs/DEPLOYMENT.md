@@ -94,6 +94,9 @@ allows overrides only inside `public`.
 
 From the public hostname, confirm all of these are denied or not found:
 
+- `/info.php`, `/phpinfo.php`, and `/public/info.php`
+- every diagnostic, database-test, or setup PHP script
+
 ```text
 /.env
 /composer.json

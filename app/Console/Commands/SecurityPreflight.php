@@ -307,12 +307,19 @@ class SecurityPreflight extends Command
             'No .env file exists inside public/.',
             'A .env file exists inside public/ and must be removed immediately.',
         );
+
+        $unexpectedPhpFiles = $this->unexpectedPublicPhpFiles();
+        $this->assert(
+            $unexpectedPhpFiles === [],
+            'public/index.php is the only executable PHP file inside public/.',
+            'Unexpected executable PHP files exist inside public/: '.implode(', ', $unexpectedPhpFiles).'. Remove them before deployment.',
+        );
     }
 
     private function addManualChecks(): void
     {
         $this->manualChecks[] = 'Verify the real HTTPS certificate chain, expiry, HTTP-to-HTTPS redirect, HSTS header, and proxy forwarding at the public URL.';
-        $this->manualChecks[] = 'Request /.env, /vendor/composer/installed.json, /storage/logs/laravel.log, and /app/ over the public hostname; every request must be denied or not found.';
+        $this->manualChecks[] = 'Request /.env, /info.php, /phpinfo.php, /public/info.php, /vendor/composer/installed.json, /storage/logs/laravel.log, and /app/ over the public hostname; every request must be denied or not found.';
         $this->manualChecks[] = 'Confirm the scheduler invokes php artisan schedule:run every minute and inspect php artisan schedule:list.';
         $this->manualChecks[] = 'Confirm the backup disk belongs to a separate hosting/provider account, then restore the newest archive into an isolated environment.';
         $this->manualChecks[] = 'Confirm .env was never committed; rotate every secret that was previously shared or published.';
@@ -386,6 +393,45 @@ class SecurityPreflight extends Command
     private function pathsEqual(string $left, string $right): bool
     {
         return $this->normalizedPath($left) === $this->normalizedPath($right);
+    }
+
+    /** @return array<int, string> */
+    private function unexpectedPublicPhpFiles(): array
+    {
+        $publicDirectory = public_path();
+
+        if (! is_dir($publicDirectory)) {
+            return ['[public directory is missing]'];
+        }
+
+        $unexpected = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(
+                $publicDirectory,
+                \FilesystemIterator::SKIP_DOTS,
+            ),
+        );
+        $normalizedPublicDirectory = $this->normalizedPath($publicDirectory);
+
+        foreach ($iterator as $file) {
+            if (
+                ! $file->isFile()
+                || preg_match('/\.(?:php(?:\d*|s)|phtml|phar)$/i', $file->getFilename()) !== 1
+            ) {
+                continue;
+            }
+
+            $path = $this->normalizedPath($file->getPathname());
+            $relativePath = ltrim(substr($path, strlen($normalizedPublicDirectory)), '/');
+
+            if ($relativePath !== 'index.php') {
+                $unexpected[] = $relativePath;
+            }
+        }
+
+        sort($unexpected, SORT_STRING);
+
+        return $unexpected;
     }
 
     private function pathIsWithin(string $path, string $parent): bool

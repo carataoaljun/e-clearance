@@ -6,12 +6,21 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Laravel enters PHP only through an internal rewrite to public/index.php.
+    # Never execute a directly requested PHP/debug/setup script from the web.
+    RewriteRule ^(?!public/index\.php$).*\.(?:php(?:\d*|s)|phtml|phar)(?:[/;]|$) - [R=404,L,NC]
+
     # Prevent direct HTTP access to sensitive root files and directories
     RewriteRule ^(\.env|\.git|composer\.(json|lock)|package(-lock)?\.json|storage|app|bootstrap/cache|database|config|resources|routes|tests|vendor|deploy|docs) - [F,L,NC]
 
     # Route all other web requests to the public/ directory
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
 </IfModule>
 
 # Fail-closed fallback if mod_rewrite is disabled on server
@@ -24,4 +33,3 @@ Options -Indexes
         Deny from all
     </IfModule>
 </IfModule>
-

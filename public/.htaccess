@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # index.php is the only public PHP entry point. Return 404 before Apache can
+    # execute stray diagnostics such as info.php or database setup scripts.
+    RewriteRule ^(?!index\.php$).*\.(?:php(?:\d*|s)|phtml|phar)(?:[/;]|$) - [R=404,L,NC]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -22,4 +26,9 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
 </IfModule>
