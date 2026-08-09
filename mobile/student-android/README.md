@@ -12,21 +12,21 @@ The app uses the existing responsive Laravel student portal inside a restricted 
 - Authenticated document downloads to the Android Downloads folder
 - Android back-button navigation
 - Loading and connection-error states
-- Configurable Laravel server address
-- External links open outside the app
+- Fixed official HTTPS server address
+- First-party redirects stay inside the app; external sites open in the browser
 - Invalid TLS certificates are rejected
 - Release builds require HTTPS
 
 ## Online server
 
-Debug and release builds now connect to the live student portal by default:
+Debug and release builds connect only to the live student portal:
 
 ```text
 https://mcceclearance.com/student/login
 ```
 
-Version 1.1 also migrates installations that retained the old emulator-only
-address to the live HTTPS service automatically.
+Version 1.2 ignores server addresses saved by older installations so launching
+the app cannot redirect from a local address into the external browser.
 
 ## Open in Android Studio
 
@@ -44,40 +44,9 @@ address to the live HTTPS service automatically.
 
 The project uses Java 17, Android Gradle Plugin 9.0.1, Gradle 9.1, compile SDK 36.1, and supports Android 8.0 or newer.
 
-## Optional local development with WAMP
-
-The debug app defaults to the live website. To use WAMP on the Android
-emulator instead, tap the gear icon and enter:
-
-```text
-http://10.0.2.2/e-clearance/public
-```
-
-`10.0.2.2` is the Android emulator alias for the Windows host computer. Start WAMP and confirm this URL works in the emulator browser:
-
-```text
-http://10.0.2.2/e-clearance/public/student/login
-```
-
-If your WAMP virtual host uses a different path, tap the **gear icon** in the app and enter the correct root address without `/student/login`.
-
-### Physical Android phone on localhost
-
-`localhost` on a phone means the phone itself, so use the Windows computer's LAN address:
-
-1. Connect the computer and phone to the same Wi-Fi network.
-2. Run `ipconfig` and find the computer's IPv4 address, for example `192.168.1.25`.
-3. Make sure Apache is reachable through Windows Firewall.
-4. Install and run the debug APK.
-5. Tap the gear icon and set:
-
-   ```text
-   http://192.168.1.25/e-clearance/public
-   ```
-
-6. The app will open `/student/login` automatically.
-
-HTTP is accepted only by debug builds for local development. Use a valid HTTPS URL for production.
+For local Android development, temporarily change `default_server_root` in
+`app/src/main/res/values/strings.xml` and rebuild a debug APK. Do not publish a
+build containing a local address.
 
 ## Build and install the debug APK
 

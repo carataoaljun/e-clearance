@@ -423,7 +423,9 @@
                         </div>
                         <button type="submit" class="login-button"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Log In</span></button>
                     </form>
-                    <a href="{{ route('landing') }}" class="landing-button"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>Back to Landing Page</span></a>
+                    @unless(str_contains((string) request()->userAgent(), 'MCCStudentAndroid/'))
+                        <a href="{{ route('landing') }}" class="landing-button"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>Back to Landing Page</span></a>
+                    @endunless
                 </div>
 
                 <div class="auth-panel" id="email-panel" data-panel="email" @if($activePanel !== 'email') hidden @endif>

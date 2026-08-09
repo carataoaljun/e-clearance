@@ -49,4 +49,13 @@ class PortalLoginInputValidationTest extends TestCase
                 ->assertSessionHasErrors('password');
         }
     }
+
+    public function test_student_android_app_hides_the_back_to_landing_button(): void
+    {
+        $this->withHeader('User-Agent', 'Mozilla/5.0 Android MCCStudentAndroid/1.2.0-debug')
+            ->get(route('student.login'))
+            ->assertOk()
+            ->assertDontSee('href="'.route('landing').'"', false)
+            ->assertDontSee('Back to Landing Page');
+    }
 }

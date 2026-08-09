@@ -3,12 +3,10 @@ package ph.edu.mcc.eclearance.student;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -19,7 +17,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,13 +32,10 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
-import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -51,9 +45,6 @@ import android.widget.Toast;
 import java.util.Locale;
 
 public final class MainActivity extends Activity {
-    private static final String PREFERENCES = "mcc_student_app";
-    private static final String SERVER_ROOT_KEY = "server_root";
-    private static final String LEGACY_EMULATOR_SERVER_ROOT = "http://10.0.2.2/e-clearance/public";
     private static final String SAVED_WEBVIEW_STATE = "student_webview_state";
     private static final int FILE_CHOOSER_REQUEST = 4101;
     private static final int STORAGE_PERMISSION_REQUEST = 4102;
@@ -61,7 +52,6 @@ public final class MainActivity extends Activity {
     private WebView webView;
     private ProgressBar pageProgress;
     private LinearLayout errorPanel;
-    private TextView serverCaption;
     private ValueCallback<Uri[]> fileChooserCallback;
     private PendingDownload pendingDownload;
     private OnBackInvokedCallback backInvokedCallback;
@@ -75,7 +65,10 @@ public final class MainActivity extends Activity {
         getWindow().setNavigationBarColor(getColor(R.color.mcc_surface));
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
 
-        serverRoot = resolveServerRoot();
+        // Always use the official HTTPS service. Older versions allowed a
+        // local address to be saved; ignoring it prevents launches from being
+        // redirected out of the WebView and into the browser.
+        serverRoot = getString(R.string.default_server_root);
         setContentView(createScreen());
         configureWebView();
         registerPredictiveBackCallback();
@@ -91,51 +84,6 @@ public final class MainActivity extends Activity {
         screen.setOrientation(LinearLayout.VERTICAL);
         screen.setBackgroundColor(getColor(R.color.mcc_surface));
         screen.setFitsSystemWindows(true);
-
-        LinearLayout toolbar = new LinearLayout(this);
-        toolbar.setGravity(Gravity.CENTER_VERTICAL);
-        toolbar.setPadding(dp(12), dp(7), dp(6), dp(7));
-        toolbar.setBackgroundColor(Color.WHITE);
-        screen.addView(toolbar, new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(54)
-        ));
-
-        ImageView mark = new ImageView(this);
-        mark.setImageResource(R.drawable.mcc_eclearance_logo);
-        mark.setContentDescription(getString(R.string.app_name));
-        toolbar.addView(mark, new LinearLayout.LayoutParams(dp(36), dp(36)));
-
-        LinearLayout titleGroup = new LinearLayout(this);
-        titleGroup.setOrientation(LinearLayout.VERTICAL);
-        titleGroup.setPadding(dp(9), 0, dp(8), 0);
-        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        toolbar.addView(titleGroup, titleParams);
-
-        TextView title = new TextView(this);
-        title.setText(R.string.app_name);
-        title.setTextColor(getColor(R.color.mcc_navy));
-        title.setTextSize(15);
-        title.setTypeface(title.getTypeface(), android.graphics.Typeface.BOLD);
-        titleGroup.addView(title);
-
-        serverCaption = new TextView(this);
-        serverCaption.setText(R.string.app_subtitle);
-        serverCaption.setTextColor(Color.rgb(102, 124, 147));
-        serverCaption.setTextSize(10);
-        serverCaption.setSingleLine(true);
-        titleGroup.addView(serverCaption);
-
-        ImageButton reload = toolbarButton(R.drawable.ic_refresh, "Reload student portal");
-        reload.setOnClickListener(view -> {
-            hideError();
-            webView.reload();
-        });
-        toolbar.addView(reload, new LinearLayout.LayoutParams(dp(42), dp(42)));
-
-        ImageButton settingsButton = toolbarButton(R.drawable.ic_settings, getString(R.string.server_settings));
-        settingsButton.setOnClickListener(view -> showServerSettings());
-        toolbar.addView(settingsButton, new LinearLayout.LayoutParams(dp(42), dp(42)));
 
         pageProgress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         pageProgress.setMax(100);
@@ -164,15 +112,6 @@ public final class MainActivity extends Activity {
         ));
 
         return screen;
-    }
-
-    private ImageButton toolbarButton(int icon, String description) {
-        ImageButton button = new ImageButton(this);
-        button.setImageResource(icon);
-        button.setContentDescription(description);
-        button.setBackgroundColor(Color.TRANSPARENT);
-        button.setPadding(dp(10), dp(10), dp(10), dp(10));
-        return button;
     }
 
     private LinearLayout createErrorPanel() {
@@ -220,15 +159,6 @@ public final class MainActivity extends Activity {
         retryParams.topMargin = dp(18);
         panel.addView(retry, retryParams);
 
-        Button configure = new Button(this);
-        configure.setText(R.string.server_settings);
-        configure.setTextColor(getColor(R.color.mcc_navy));
-        configure.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));
-        configure.setOnClickListener(view -> showServerSettings());
-        LinearLayout.LayoutParams configureParams = new LinearLayout.LayoutParams(dp(180), dp(46));
-        configureParams.topMargin = dp(5);
-        panel.addView(configure, configureParams);
-
         return panel;
     }
 
@@ -264,92 +194,7 @@ public final class MainActivity extends Activity {
             showError();
             return;
         }
-        webView.loadUrl(serverRoot + "/student/login");
-    }
-
-    private void showServerSettings() {
-        EditText input = new EditText(this);
-        input.setSingleLine(true);
-        input.setHint(R.string.server_address_hint);
-        input.setText(serverRoot);
-        input.setSelectAllOnFocus(true);
-        input.setPadding(dp(12), dp(10), dp(12), dp(10));
-
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(20), dp(4), dp(20), 0);
-        content.addView(input, new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-
-        TextView help = new TextView(this);
-        help.setText(isDebuggable()
-            ? "Online default: https://mcceclearance.com\nUse a local address only when developing with WAMP."
-            : "The production student portal uses a secure HTTPS address.");
-        help.setTextColor(Color.rgb(100, 120, 140));
-        help.setTextSize(11);
-        help.setPadding(0, dp(8), 0, 0);
-        content.addView(help);
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-            .setTitle(R.string.server_settings)
-            .setView(content)
-            .setNegativeButton(android.R.string.cancel, null)
-            .setPositiveButton(android.R.string.ok, null)
-            .create();
-
-        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
-            String normalized = normalizeServerRoot(input.getText().toString());
-            String error = validateServerRoot(normalized);
-            if (error != null) {
-                input.setError(error);
-                return;
-            }
-
-            if (!normalized.equals(serverRoot)) {
-                serverRoot = normalized;
-                preferences().edit().putString(SERVER_ROOT_KEY, serverRoot).apply();
-                CookieManager.getInstance().removeAllCookies(null);
-                CookieManager.getInstance().flush();
-                WebStorage.getInstance().deleteAllData();
-                webView.clearCache(true);
-            }
-            dialog.dismiss();
-            loadStudentPortal();
-        }));
-        dialog.show();
-    }
-
-    private String normalizeServerRoot(String value) {
-        String normalized = value.trim();
-        while (normalized.endsWith("/")) {
-            normalized = normalized.substring(0, normalized.length() - 1);
-        }
-        if (normalized.endsWith("/student/login")) {
-            normalized = normalized.substring(0, normalized.length() - "/student/login".length());
-        } else if (normalized.endsWith("/student")) {
-            normalized = normalized.substring(0, normalized.length() - "/student".length());
-        }
-        return normalized;
-    }
-
-    private String validateServerRoot(String value) {
-        Uri uri = Uri.parse(value);
-        String scheme = uri.getScheme();
-        if (scheme == null || uri.getHost() == null || uri.getHost().isBlank()) {
-            return "Enter a complete server address.";
-        }
-        if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
-            return "Use an HTTP or HTTPS address.";
-        }
-        if (!isDebuggable() && "http".equalsIgnoreCase(scheme)) {
-            return "Release builds require HTTPS.";
-        }
-        if (uri.getQuery() != null || uri.getFragment() != null) {
-            return "Remove query parameters and fragments from the server address.";
-        }
-        return null;
+        webView.loadUrl(studentPortalUrl());
     }
 
     private boolean isAllowedStudentUrl(Uri destination) {
@@ -357,7 +202,7 @@ public final class MainActivity extends Activity {
             return true;
         }
         Uri root = Uri.parse(serverRoot);
-        if (!sameOrigin(root, destination)) {
+        if (!samePortalOrigin(root, destination)) {
             return false;
         }
 
@@ -370,10 +215,21 @@ public final class MainActivity extends Activity {
         return destinationPath.equals(studentPath) || destinationPath.startsWith(studentPath + "/");
     }
 
-    private boolean sameOrigin(Uri left, Uri right) {
+    private boolean samePortalOrigin(Uri left, Uri right) {
         return equalsIgnoreCase(left.getScheme(), right.getScheme())
-            && equalsIgnoreCase(left.getHost(), right.getHost())
+            && equalsIgnoreCase(normalizeHost(left.getHost()), normalizeHost(right.getHost()))
             && effectivePort(left) == effectivePort(right);
+    }
+
+    private String normalizeHost(String host) {
+        if (host == null) {
+            return null;
+        }
+        return host.regionMatches(true, 0, "www.", 0, 4) ? host.substring(4) : host;
+    }
+
+    private String studentPortalUrl() {
+        return serverRoot + "/student/login";
     }
 
     private int effectivePort(Uri uri) {
@@ -426,25 +282,6 @@ public final class MainActivity extends Activity {
 
     private boolean isDebuggable() {
         return (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-    }
-
-    private SharedPreferences preferences() {
-        return getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
-    }
-
-    private String resolveServerRoot() {
-        SharedPreferences preferences = preferences();
-        String defaultRoot = getString(R.string.default_server_root);
-        String savedRoot = preferences.getString(SERVER_ROOT_KEY, defaultRoot);
-
-        // Version 1.0 debug builds saved the emulator-only WAMP address. Move
-        // those installations to the live service when they update.
-        if (LEGACY_EMULATOR_SERVER_ROOT.equals(savedRoot)) {
-            preferences.edit().putString(SERVER_ROOT_KEY, defaultRoot).apply();
-            return defaultRoot;
-        }
-
-        return savedRoot == null || savedRoot.isBlank() ? defaultRoot : savedRoot;
     }
 
     private int dp(int value) {
@@ -537,6 +374,14 @@ public final class MainActivity extends Activity {
             if (isAllowedStudentUrl(destination)) {
                 return false;
             }
+
+            // First-party redirects (including the landing page and www host
+            // alias) stay in the application and return to the student login.
+            if (destination != null && samePortalOrigin(Uri.parse(serverRoot), destination)) {
+                view.loadUrl(studentPortalUrl());
+                return true;
+            }
+
             openExternal(destination);
             return true;
         }

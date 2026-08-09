@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MCC e-Clearance</string>
-    <string name="app_subtitle">Student Portal</string>
     <string name="default_server_root">https://mcceclearance.com</string>
-    <string name="server_settings">Server settings</string>
-    <string name="server_address_hint">https://mcceclearance.com</string>
     <string name="connection_error_title">Student portal unavailable</string>
     <string name="connection_error_body">Check your internet connection and confirm that the MCC e-Clearance website is available.</string>
     <string name="retry">Retry</string>
