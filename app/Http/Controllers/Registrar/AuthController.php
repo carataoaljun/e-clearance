@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Registrar;
 
 use App\Http\Controllers\Controller;
 use App\Models\Registrar;
-use App\Support\AuditLogger;
+use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -33,18 +31,16 @@ class AuthController extends Controller
         $registrar = Registrar::where('email', $credentials['login'])
             ->orWhere('registrar_id', $credentials['login'])
             ->first();
+        $security = LoginSecurity::for($request, 'registrar', $registrar?->registrar_id ?? $credentials['login']);
+        $security->assertNotLocked('login');
+        $security->assertCaptcha($request, 'login');
 
         if (! $registrar || ! Hash::check($credentials['password'], $registrar->password)) {
-            AuditLogger::record('authentication.failed', 'registrar', null, null, null, [
-                'guard' => 'registrar',
-                'identifier_hash' => hash('sha256', Str::lower($credentials['login'])),
-            ]);
-            throw ValidationException::withMessages([
-                'login' => 'The credentials you entered are incorrect.',
-            ]);
+            $security->fail('login');
         }
 
         Auth::guard('registrar')->login($registrar, $request->boolean('remember'));
+        $security->clear();
         $request->session()->forget('portal_password_recovery_registrar');
         $request->session()->regenerate();
 

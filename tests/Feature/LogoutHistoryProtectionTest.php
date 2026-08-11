@@ -9,6 +9,7 @@ use App\Models\Registrar;
 use App\Models\StudentAccount;
 use App\Models\Treasurer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class LogoutHistoryProtectionTest extends TestCase
@@ -91,9 +92,15 @@ class LogoutHistoryProtectionTest extends TestCase
         ];
 
         foreach ($accounts as [$guard, $loginRoute, $credentials, $logoutRoute, $protectedRoute, $expectedLoginRoute, $account]) {
-            $this->post(route($loginRoute), $credentials)
-                ->assertRedirect(route($protectedRoute))
-                ->assertSessionHas('login_success');
+            $loginResponse = $this->post(route($loginRoute), $credentials);
+            if ($guard === 'admin') {
+                $loginResponse->assertRedirect(route('login'));
+                $challenge = session('admin_login_challenge');
+                $challenge['code_hash'] = Hash::make('629105');
+                $loginResponse = $this->withSession(['admin_login_challenge' => $challenge])
+                    ->post(route('login.otp.verify'), ['verification_code' => '629105']);
+            }
+            $loginResponse->assertRedirect(route($protectedRoute))->assertSessionHas('login_success');
             $this->assertAuthenticatedAs($account, $guard);
 
             $logoutResponse = $this->post(route($logoutRoute));

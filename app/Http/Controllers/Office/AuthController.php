@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Office;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminPersonnel;
-use App\Support\AuditLogger;
+use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -34,22 +32,20 @@ class AuthController extends Controller
         $personnel = AdminPersonnel::where('email', $credentials['login'])
             ->orWhere('personnel_id', $credentials['login'])
             ->first();
+        $security = LoginSecurity::for($request, 'office', $personnel?->personnel_id ?? $credentials['login']);
+        $security->assertNotLocked('login');
+        $security->assertCaptcha($request, 'login');
 
         if (! $personnel || ! Hash::check($credentials['password'], $personnel->password)) {
-            $this->auditFailure($credentials['login']);
-            throw ValidationException::withMessages([
-                'login' => 'The credentials you entered are incorrect.',
-            ]);
+            $security->fail('login');
         }
 
         if ($personnel->role !== $credentials['role']) {
-            $this->auditFailure($credentials['login']);
-            throw ValidationException::withMessages([
-                'role' => 'The selected role does not match this account.',
-            ]);
+            $security->fail('login', 'role');
         }
 
         Auth::guard('office')->login($personnel, $request->boolean('remember'));
+        $security->clear();
         $request->session()->forget('portal_password_recovery_office');
         $request->session()->regenerate();
 
@@ -64,13 +60,5 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return PostLogout::response($request, 'office.login');
-    }
-
-    private function auditFailure(string $identifier): void
-    {
-        AuditLogger::record('authentication.failed', 'office', null, null, null, [
-            'guard' => 'office',
-            'identifier_hash' => hash('sha256', Str::lower($identifier)),
-        ]);
     }
 }

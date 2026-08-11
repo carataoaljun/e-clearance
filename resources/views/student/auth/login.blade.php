@@ -159,6 +159,12 @@
         .forgot:hover { text-decoration: underline; }
 
         .login-button { display: flex; width: 100%; min-height: 56px; align-items: center; justify-content: center; gap: 11px; color: #fff; border: 0; border-radius: 15px; background: linear-gradient(135deg, #079cff, #075bea 64%, #1546dc); box-shadow: 0 12px 24px rgba(7,91,234,.26); font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+        .captcha-box { margin: 2px 0 14px; padding: 12px; border: 1px solid #c9dcef; border-radius: 15px; background: rgba(239,247,255,.76); }
+        .captcha-label { display: block; margin: 0 0 9px; color: #34506f; font-size: .78rem; font-weight: 700; }
+        .captcha-row { display: grid; grid-template-columns: 190px 42px 1fr; gap: 8px; align-items: center; }
+        .captcha-image { width: 190px; height: 64px; border: 1px solid #b9cee5; border-radius: 11px; background: #eef7ff; }
+        .captcha-refresh { display: grid; width: 42px; height: 42px; padding: 0; place-items: center; color: #075bea; border: 1px solid #bdd3ea; border-radius: 11px; background: #fff; cursor: pointer; }
+        .captcha-answer { width: 100%; height: 48px; padding: 0 12px; text-align: center; text-transform: uppercase; letter-spacing: .16em; border: 1px solid #ccdbed; border-radius: 11px; outline: none; background: #fff; font-weight: 800; }
         .login-button:hover { transform: translateY(-2px); box-shadow: 0 16px 28px rgba(7,91,234,.31); }
         .login-button:active { transform: translateY(0); }
         .landing-button { display:flex; width:100%; min-height:48px; margin-top:11px; align-items:center; justify-content:center; gap:8px; color:#254f83; border:1px solid rgba(86,135,192,.28); border-radius:14px; background:rgba(246,251,255,.68); font-size:.94rem; font-weight:700; text-decoration:none; transition:transform .2s, border-color .2s, background .2s, box-shadow .2s; }
@@ -262,6 +268,9 @@
             .field input { height: 52px; }
             .form-options { margin: 11px 2px 15px; }
             .login-button { min-height: 50px; }
+            .captcha-row { grid-template-columns: 1fr 42px; }
+            .captcha-image { width: 100%; object-fit: cover; }
+            .captcha-answer { grid-column: 1 / -1; }
             .help { margin-top: 14px; }
             .copyright { margin-top: 8px; }
             .form-options { align-items: flex-start; }
@@ -368,6 +377,7 @@
             <div class="login-card">
                 @php
                     $activePanel = in_array($recoveryStep ?? 'login', ['email', 'code', 'reset'], true) ? $recoveryStep : 'login';
+                    $captchaRequired = session('login_security.captcha.student', false);
                     $emailParts = str_contains($recoveryEmail ?? '', '@') ? explode('@', $recoveryEmail, 2) : [];
                     $maskedEmail = count($emailParts) === 2
                         ? substr($emailParts[0], 0, min(2, strlen($emailParts[0]))) . str_repeat('•', max(3, strlen($emailParts[0]) - 2)) . '@' . $emailParts[1]
@@ -417,6 +427,16 @@
                             <input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" maxlength="128" data-validation-label="Password" required @error('password') aria-invalid="true" @enderror>
                             <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
                         </div>
+                        @if($captchaRequired)
+                            <div class="captcha-box">
+                                <label class="captcha-label" for="captcha-answer">Security check: enter the five characters shown</label>
+                                <div class="captcha-row">
+                                    <img class="captcha-image" data-captcha-image src="{{ route('auth.captcha', 'student') }}" alt="Five-character security code">
+                                    <button class="captcha-refresh" type="button" data-captcha-refresh aria-label="Load a new security code"><i class="bi bi-arrow-clockwise"></i></button>
+                                    <input class="captcha-answer" type="text" name="captcha_answer" id="captcha-answer" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+                                </div>
+                            </div>
+                        @endif
                         <div class="form-options">
                             <label class="remember" for="remember"><input type="checkbox" name="remember" id="remember" @checked(old('remember'))><span>Remember me</span></label>
                             <button class="forgot" type="button" data-show-auth-panel="email">Forgot password?</button>
@@ -524,6 +544,13 @@
                 toggle.setAttribute('aria-pressed', String(willShow));
                 toggle.querySelector('i').className = willShow ? 'bi bi-eye-slash' : 'bi bi-eye';
                 password.focus();
+            });
+        });
+
+        document.querySelectorAll('[data-captcha-refresh]').forEach(button => {
+            button.addEventListener('click', () => {
+                const image = button.closest('.captcha-row').querySelector('[data-captcha-image]');
+                image.src = image.src.split('?')[0] + `?refresh=${Date.now()}`;
             });
         });
     </script>

@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Instructors;
 
 use App\Http\Controllers\Controller;
+use App\Models\Instructor;
+use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -27,18 +30,22 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'max:128'],
         ]);
 
-        $remember = $request->boolean('remember');
-        if (Auth::guard('instructor')->attempt($data, $remember)) {
-            $request->session()->forget('portal_password_recovery_instructor');
-            $request->session()->regenerate();
+        $security = LoginSecurity::for($request, 'instructor', $data['email']);
+        $security->assertNotLocked('email');
+        $security->assertCaptcha($request, 'email');
 
-            return redirect()->route('instructor.dashboard')
-                ->with('login_success', 'Login successful. Welcome to the Instructor panel.');
+        $instructor = Instructor::whereRaw('LOWER(email) = ?', [strtolower(trim($data['email']))])->first();
+        if (! $instructor || ! Hash::check($data['password'], $instructor->password)) {
+            $security->fail('email');
         }
 
-        return back()
-            ->withErrors(['email' => 'Invalid email or password.'])
-            ->onlyInput('email');
+        Auth::guard('instructor')->login($instructor, $request->boolean('remember'));
+        $security->clear();
+        $request->session()->forget('portal_password_recovery_instructor');
+        $request->session()->regenerate();
+
+        return redirect()->route('instructor.dashboard')
+            ->with('login_success', 'Login successful. Welcome to the Instructor panel.');
     }
 
     // POST /instructor/logout (was logout.php)

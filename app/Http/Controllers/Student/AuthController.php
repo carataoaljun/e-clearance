@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\StudentAccount;
 use App\Support\AuditLogger;
+use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,19 +36,18 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'max:128'],
         ]);
 
+        $security = LoginSecurity::for($request, 'student', $credentials['student_id']);
+        $security->assertNotLocked('student_id');
+        $security->assertCaptcha($request, 'student_id');
+
         $student = StudentAccount::where('student_id', $credentials['student_id'])->first();
 
         if (! $student || ! Hash::check($credentials['password'], $student->password)) {
-            AuditLogger::record('authentication.failed', 'student', null, null, null, [
-                'guard' => 'student',
-                'identifier_hash' => hash('sha256', strtolower($credentials['student_id'])),
-            ]);
-            throw ValidationException::withMessages([
-                'student_id' => 'The Student ID or password you entered is incorrect.',
-            ]);
+            $security->fail('student_id');
         }
 
         Auth::guard('student')->login($student, $request->boolean('remember'));
+        $security->clear();
         $request->session()->forget('student_password_recovery');
         $request->session()->regenerate();
 

@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Treasurer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Treasurer;
-use App\Support\AuditLogger;
+use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -31,24 +29,21 @@ class AuthController extends Controller
             'treasurer_type' => ['required', 'string', 'in:department,section'],
         ]);
 
-        $treasurer = Treasurer::where('treasurer_type', $credentials['treasurer_type'])
-            ->where(function ($query) use ($credentials) {
-                $query->where('email', $credentials['login'])
-                    ->orWhere('treasurer_id', $credentials['login']);
-            })
+        $treasurer = Treasurer::where('email', $credentials['login'])
+            ->orWhere('treasurer_id', $credentials['login'])
             ->first();
+        $security = LoginSecurity::for($request, 'treasurer', $treasurer?->treasurer_id ?? $credentials['login']);
+        $security->assertNotLocked('login');
+        $security->assertCaptcha($request, 'login');
 
-        if (! $treasurer || ! Hash::check($credentials['password'], $treasurer->password)) {
-            AuditLogger::record('authentication.failed', 'treasurer', null, null, null, [
-                'guard' => 'treasurer',
-                'identifier_hash' => hash('sha256', Str::lower($credentials['login'])),
-            ]);
-            throw ValidationException::withMessages([
-                'login' => 'The credentials you entered are incorrect.',
-            ]);
+        if (! $treasurer
+            || $treasurer->treasurer_type !== $credentials['treasurer_type']
+            || ! Hash::check($credentials['password'], $treasurer->password)) {
+            $security->fail('login');
         }
 
         Auth::guard('treasurer')->login($treasurer, $request->boolean('remember'));
+        $security->clear();
         $request->session()->forget('portal_password_recovery_treasurer');
         $request->session()->regenerate();
 

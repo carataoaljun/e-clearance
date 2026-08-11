@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountRecoveryController;
 use App\Http\Controllers\AdminPersonnelController;
 use App\Http\Controllers\Auth\AdminAuthController;
+use App\Http\Controllers\Auth\LoginCaptchaController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ClearanceFormController;
 use App\Http\Controllers\DashboardController;
@@ -30,6 +31,10 @@ use Illuminate\Support\Facades\Route;
 
 // Public portal directory and system landing page
 Route::view('/', 'landing')->name('landing');
+Route::get('/auth/captcha/{portal}', LoginCaptchaController::class)
+    ->whereIn('portal', ['main-admin', 'student', 'instructor', 'office', 'treasurer', 'registrar'])
+    ->middleware('throttle:30,1')
+    ->name('auth.captcha');
 Route::get('/clearance/verify/{token}', [ClearanceFormController::class, 'verifyToken'])
     ->whereAlphaNumeric('token')
     ->middleware('throttle:30,1')
@@ -76,6 +81,12 @@ Route::middleware('guest:admin')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])
         ->middleware('throttle:login')
         ->name('login.post');
+    Route::post('/mainAdmin/login-code', [AdminAuthController::class, 'verifyLoginCode'])
+        ->middleware('throttle:otp-verify')->name('login.otp.verify');
+    Route::post('/mainAdmin/login-code/resend', [AdminAuthController::class, 'resendLoginCode'])
+        ->middleware('throttle:otp-send')->name('login.otp.resend');
+    Route::post('/mainAdmin/login-code/cancel', [AdminAuthController::class, 'cancelLoginCode'])
+        ->name('login.otp.cancel');
 });
 
 /*

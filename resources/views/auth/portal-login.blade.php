@@ -52,9 +52,10 @@
         .recovery-note{margin:-2px 0 15px;color:var(--muted);text-align:center;font-size:.8rem;line-height:1.5}.recovery-note strong{color:#193f70}.code-field input{padding-right:20px;text-align:center;letter-spacing:.42em;font-size:1.3rem;font-weight:800}.code-field>i{display:none}
         .password-hint{margin:-6px 4px 13px;color:#607795;font-size:.72rem;line-height:1.4}.recovery-footer{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px 13px;margin-top:13px}.recovery-footer form{margin:0}.text-action{padding:5px;color:var(--blue);border:0;outline:0;background:transparent;font-size:.8rem;font-weight:700;cursor:pointer}.text-action:hover{text-decoration:underline}.text-action.muted{color:#60748e}
         .back-button{display:flex;width:100%;min-height:46px;margin-top:10px;align-items:center;justify-content:center;gap:8px;color:#34506f;border:0;border-radius:14px;background:rgba(230,240,249,.76);font-weight:700;cursor:pointer}.back-button:hover{color:var(--blue);background:#e6f3ff}
+        .captcha-box{margin:2px 0 14px;padding:12px;border:1px solid #c9dcef;border-radius:15px;background:rgba(239,247,255,.76)}.captcha-label{display:block;margin:0 0 9px;color:#34506f;font-size:.78rem;font-weight:700}.captcha-row{display:grid;grid-template-columns:190px 42px 1fr;gap:8px;align-items:center}.captcha-image{width:190px;height:64px;border:1px solid #b9cee5;border-radius:11px;background:#eef7ff}.captcha-refresh{display:grid;width:42px;height:42px;padding:0;place-items:center;color:var(--blue);border:1px solid #bdd3ea;border-radius:11px;background:#fff;cursor:pointer}.captcha-answer{width:100%;height:48px;padding:0 12px;text-align:center;text-transform:uppercase;letter-spacing:.16em;border:1px solid #ccdbed;border-radius:11px;outline:none;background:#fff;font-weight:800}.captcha-answer:focus{border-color:#4791ff;box-shadow:0 0 0 4px rgba(7,91,234,.1)}
         .help { margin:19px 0 0; color:var(--muted); text-align:center; font-size:.82rem; }.copyright{margin:13px 0 0;color:#31557f;text-align:center;font-size:.74rem}
         @media(max-width:940px){.page{display:flex;flex-direction:column;justify-content:center;gap:16px;padding:18px 20px}.intro{text-align:center}.brand{justify-content:center;margin-bottom:0;text-align:left}.intro>h2,.intro-copy,.benefits{display:none}.school-logo{width:76px;height:76px}.brand h1{font-size:1.35rem}.tagline{font-size:.82rem}.login-wrap{width:min(100%,520px)}.login-card{min-height:min(68vh,590px)}}
-        @media(max-width:560px){.page{gap:10px;padding:12px}.school-logo{width:64px;height:64px;padding:4px}.brand{gap:11px}.brand h1{font-size:1.1rem}.tagline{margin-top:4px;font-size:.72rem}.login-card{min-height:min(72vh,560px);padding:20px 17px;border-radius:25px}.role-badge{width:62px;height:62px;margin-bottom:9px;border-width:8px;font-size:1.45rem}.login-heading h2{font-size:1.5rem}.login-heading p{margin:5px 0 14px;font-size:.8rem}.field{margin-bottom:10px}.field input,.field select{height:50px}.form-options{margin:10px 2px 14px}.login-button{min-height:49px}.help{margin-top:13px}.copyright{margin-top:7px}}
+        @media(max-width:560px){.page{gap:10px;padding:12px}.school-logo{width:64px;height:64px;padding:4px}.brand{gap:11px}.brand h1{font-size:1.1rem}.tagline{margin-top:4px;font-size:.72rem}.login-card{min-height:min(72vh,560px);padding:20px 17px;border-radius:25px}.role-badge{width:62px;height:62px;margin-bottom:9px;border-width:8px;font-size:1.45rem}.login-heading h2{font-size:1.5rem}.login-heading p{margin:5px 0 14px;font-size:.8rem}.field{margin-bottom:10px}.field input,.field select{height:50px}.form-options{margin:10px 2px 14px}.login-button{min-height:49px}.help{margin-top:13px}.copyright{margin-top:7px}.captcha-row{grid-template-columns:1fr 42px}.captcha-image{width:100%;object-fit:cover}.captcha-answer{grid-column:1/-1}}
         @media(max-height:680px){.page{padding-top:12px;padding-bottom:12px}.login-card{min-height:auto;padding-top:20px;padding-bottom:20px}.role-badge{width:58px;height:58px;margin-bottom:8px;border-width:7px;font-size:1.35rem}.login-heading p{margin:4px 0 12px}.field{margin-bottom:9px}.field input,.field select{height:48px}.form-options{margin:9px 2px 12px}.help,.copyright{display:none}}
     </style>
 </head>
@@ -67,6 +68,10 @@
     $recoveryState = session($recoverySessionKey, []);
     $recoveryStep = $recoveryState['stage'] ?? ((old('recovery_action') === 'email' && old('recovery_portal') === $recoveryPortal) ? 'email' : 'login');
     $activePanel = in_array($recoveryStep, ['email', 'code', 'reset'], true) ? $recoveryStep : 'login';
+    $adminLoginChallenge = $recoveryPortal === 'main-admin' ? session('admin_login_challenge') : null;
+    if (is_array($adminLoginChallenge)) $activePanel = 'admin-otp';
+    $loginGuard = $recoveryPortal === 'main-admin' ? 'admin' : $recoveryPortal;
+    $captchaRequired = session("login_security.captcha.{$loginGuard}", false);
     $recoveryEmail = $recoveryState['email'] ?? old('email', '');
     $emailParts = str_contains($recoveryEmail, '@') ? explode('@', $recoveryEmail, 2) : [];
     $maskedEmail = count($emailParts) === 2 ? substr($emailParts[0], 0, min(2, strlen($emailParts[0]))) . str_repeat('•', max(3, strlen($emailParts[0]) - 2)) . '@' . $emailParts[1] : $recoveryEmail;
@@ -75,6 +80,7 @@
         'email' => ['icon' => 'bi-envelope-check', 'title' => 'Recover Password', 'subtitle' => 'Verify the email registered to your account.'],
         'code' => ['icon' => 'bi-shield-check', 'title' => 'Check Your Email', 'subtitle' => 'Enter the six-digit verification code we sent.'],
         'reset' => ['icon' => 'bi-key', 'title' => 'Create New Password', 'subtitle' => 'Choose a strong password for your account.'],
+        'admin-otp' => ['icon' => 'bi-envelope-shield', 'title' => 'Verify Your Sign-in', 'subtitle' => 'Enter the one-time code sent to your admin email.'],
     ];
     $activeHeading = $panelHeadings[$activePanel];
 @endphp
@@ -101,6 +107,16 @@
                         <div class="field"><i class="bi bi-person-badge"></i><label for="portal-role" hidden>{{ $roleLabel }}</label><select name="{{ $roleName }}" id="portal-role" data-validation-label="{{ $roleLabel }}" required><option value="">{{ $rolePlaceholder }}</option>@foreach($roleOptions as $value=>$label)<option value="{{ $value }}" @selected(old($roleName)===$value)>{{ $label }}</option>@endforeach</select></div>
                     @endif
                     <div class="field"><i class="bi bi-lock"></i><label for="password" hidden>Password</label><input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" maxlength="128" data-validation-label="Password" required><button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye"></i></button></div>
+                    @if($captchaRequired)
+                        <div class="captcha-box">
+                            <label class="captcha-label" for="captcha-answer">Security check: enter the five characters shown</label>
+                            <div class="captcha-row">
+                                <img class="captcha-image" data-captcha-image src="{{ route('auth.captcha', $recoveryPortal) }}" alt="Five-character security code">
+                                <button class="captcha-refresh" type="button" data-captcha-refresh aria-label="Load a new security code"><i class="bi bi-arrow-clockwise"></i></button>
+                                <input class="captcha-answer" type="text" name="captcha_answer" id="captcha-answer" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+                            </div>
+                        </div>
+                    @endif
                     <div class="form-options">@if($showRemember)<label class="remember"><input type="checkbox" name="remember" @checked(old('remember'))><span>Remember me</span></label>@else<span></span>@endif<button class="forgot" type="button" data-show-auth-panel="email">Forgot password?</button></div>
                     <button type="submit" class="login-button"><i class="bi bi-box-arrow-in-right"></i><span>Log In</span></button>
                 </form>
@@ -144,6 +160,26 @@
                 </form>
                 <form method="POST" action="{{ route('portal-password-recovery.cancel', $recoveryPortal) }}">@csrf<button type="submit" class="back-button"><i class="bi bi-x-lg"></i> Cancel Password Reset</button></form>
             </div>
+
+            @if(is_array($adminLoginChallenge))
+                @php
+                    $adminOtpEmail = (string) ($adminLoginChallenge['email'] ?? '');
+                    $adminOtpParts = str_contains($adminOtpEmail, '@') ? explode('@', $adminOtpEmail, 2) : [];
+                    $adminOtpMasked = count($adminOtpParts) === 2 ? substr($adminOtpParts[0], 0, min(2, strlen($adminOtpParts[0]))).str_repeat('•', max(3, strlen($adminOtpParts[0]) - 2)).'@'.$adminOtpParts[1] : $adminOtpEmail;
+                @endphp
+                <div class="auth-panel" data-panel="admin-otp" @if($activePanel !== 'admin-otp') hidden @endif>
+                    <p class="recovery-note">Code sent to <strong>{{ $adminOtpMasked }}</strong>. It expires after 10 minutes and works only once.</p>
+                    <form method="POST" action="{{ route('login.otp.verify') }}">
+                        @csrf
+                        <div class="field code-field"><i class="bi bi-shield-lock"></i><label for="admin-login-code" hidden>Six-digit sign-in code</label><input type="text" inputmode="numeric" name="verification_code" id="admin-login-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" data-validation-label="Sign-in code" data-validation-rule="verification-code" required autofocus></div>
+                        <button type="submit" class="login-button"><i class="bi bi-shield-check"></i><span>Verify &amp; Open Admin Panel</span></button>
+                    </form>
+                    <div class="recovery-footer">
+                        <form method="POST" action="{{ route('login.otp.resend') }}">@csrf<button type="submit" class="text-action">Resend code</button></form>
+                        <form method="POST" action="{{ route('login.otp.cancel') }}">@csrf<button type="submit" class="text-action muted">Cancel and return to login</button></form>
+                    </div>
+                </div>
+            @endif
             <p class="help">Need help? Contact your administrator.</p>
         </div>
         <p class="copyright">&copy; {{ date('Y') }} Madridejos Community College. All rights reserved.</p>
@@ -154,6 +190,7 @@ const headingMap=@json($panelHeadings),headingTitle=document.getElementById('aut
 function showAuthPanel(name){const panel=document.querySelector(`[data-panel="${name}"]`);if(!panel)return;document.querySelectorAll('[data-panel]').forEach(item=>{item.hidden=item!==panel;item.classList.remove('panel-enter')});panel.classList.add('panel-enter');headingTitle.textContent=headingMap[name].title;headingCopy.textContent=headingMap[name].subtitle;headingIcon.className=`bi ${headingMap[name].icon}`;window.setTimeout(()=>panel.querySelector('input:not([type="hidden"])')?.focus(),80)}
 document.querySelectorAll('[data-show-auth-panel]').forEach(button=>button.addEventListener('click',()=>showAuthPanel(button.dataset.showAuthPanel)));
 document.querySelectorAll('[data-password-toggle]').forEach(toggle=>toggle.addEventListener('click',()=>{const password=document.getElementById(toggle.dataset.passwordToggle),show=password.type==='password';password.type=show?'text':'password';toggle.setAttribute('aria-label',show?'Hide password':'Show password');toggle.setAttribute('aria-pressed',String(show));toggle.querySelector('i').className=show?'bi bi-eye-slash':'bi bi-eye';password.focus()}));
+document.querySelectorAll('[data-captcha-refresh]').forEach(button=>button.addEventListener('click',()=>{const image=button.closest('.captcha-row').querySelector('[data-captcha-image]');image.src=image.src.split('?')[0]+`?refresh=${Date.now()}`}));
 </script>
 <script src="{{ asset('js/auth-form-validation.js') }}"></script>
 </body>
