@@ -24,7 +24,6 @@
     $pendingSubmissions = $submissions->count() - $approvedSubmissions;
 @endphp
 <div class="submission-workspace">
-    <div class="submission-section-title"><div><h2>Submission & Remark</h2><p>Review financial documents, leave feedback, and update clearance status.</p></div><span class="submission-count">{{ $submissions->count() }} submissions</span></div>
     <div class="submission-summary">
         <article class="clearance-stat total"><div class="clearance-stat-main"><span class="clearance-stat-icon"><i class="bi bi-files"></i></span><div class="clearance-stat-copy"><small>Submitted</small><strong>{{ $submissions->count() }}</strong><span>Financial documents received</span></div></div></article>
         <article class="clearance-stat approved"><div class="clearance-stat-main"><span class="clearance-stat-icon"><i class="bi bi-check-circle"></i></span><div class="clearance-stat-copy"><small>Approved</small><strong>{{ $approvedSubmissions }}</strong><span>Completed reviews</span></div></div></article>

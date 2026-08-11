@@ -151,6 +151,13 @@ class ClearanceFormViewTest extends TestCase
         $registrar = new Registrar(['id' => 1, 'email' => 'registrar@example.com']);
         $registrar->setAttribute('email', 'registrar@example.com');
 
+        DB::table('office_clearance_status')->insert([
+            'student_id' => $student->student_id,
+            'office_role' => 'registrar',
+            'approver_id' => 'REG-1',
+            'status' => 'Pending',
+        ]);
+
         $response = $this->actingAs($registrar, 'registrar')->get('/registrar/clearance-form/'.$student->student_id);
 
         $response->assertOk();

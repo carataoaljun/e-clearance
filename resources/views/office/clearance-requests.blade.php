@@ -2,10 +2,10 @@
 
 @section('title', 'Office Clearance Requests')
 @section('portal-name', 'Office Portal')
-@section('portal-subtitle', $office->office)
-@section('page-title', 'Student Clearance Requests')
+@section('portal-subtitle', ucwords($officeName))
+@section('page-title', ucwords($officeName) . ' Clearance Requests')
 @section('user-label', $office->full_name)
-@section('user-role', $office->role)
+@section('user-role', ucwords($officeName))
 @push('styles')<link href="{{ asset('css/clearance_workspace.css') }}" rel="stylesheet">@endpush
 
 @section('nav')
@@ -23,7 +23,7 @@
     @include('partials.clearance-summary', compact('pendingCount', 'approvedCount', 'totalStudents'))
     @include('partials.clearance-filters', ['action' => route('office.clearance.requests'), 'programs' => $filterPrograms, 'years' => $filterYears, 'sections' => $filterSections])
     <section class="clearance-table-card">
-        <div class="clearance-table-heading"><h3>Student Clearance Requests</h3><span>{{ $requests->total() }} records</span></div>
+        <div class="clearance-table-heading"><h3>{{ ucwords($officeName) }} Clearance Requests</h3><span>{{ $requests->total() }} assigned records</span></div>
         @include('partials.clearance-bulk-toolbar', ['endpoint' => route('office.clearance.bulk-status')])
         <div class="clearance-table-wrap"><table class="clearance-table">
             <thead><tr><th class="clearance-select-cell"><input class="clearance-select" type="checkbox" data-bulk-select-all aria-label="Select all clearance records on this page"></th><th>#</th><th>Student</th><th>Program</th><th>Year Level</th><th>Section</th><th>Updated</th><th>Status</th><th>Actions</th></tr></thead>

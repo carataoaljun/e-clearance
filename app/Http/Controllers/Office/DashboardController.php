@@ -136,7 +136,7 @@ class DashboardController extends Controller
             ->orderByDesc('office_clearance_status.updated_at')
             ->get();
 
-        return view('office.submissions', compact('office', 'submissions', 'remarks'));
+        return view('office.submissions', compact('office', 'officeName', 'submissions', 'remarks'));
     }
 
     public function viewSubmissionFile(int $submission, Request $request)
@@ -208,7 +208,7 @@ class DashboardController extends Controller
             ->orderBy('office_clearance_status.updated_at', $sort)
             ->paginate(15)->withQueryString();
 
-        return view('office.clearance-requests', compact('office', 'requests', 'pendingCount', 'approvedCount', 'totalStudents', 'filterPrograms', 'filterYears', 'filterSections'));
+        return view('office.clearance-requests', compact('office', 'officeName', 'requests', 'pendingCount', 'approvedCount', 'totalStudents', 'filterPrograms', 'filterYears', 'filterSections'));
     }
 
     public function setClearanceStatus(Request $request)

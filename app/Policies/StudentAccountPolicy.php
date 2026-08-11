@@ -34,6 +34,7 @@ class StudentAccountPolicy
 
     public function reviewRegistrar(Authenticatable $actor, StudentAccount $student): bool
     {
-        return $actor instanceof Registrar;
+        return $actor instanceof Registrar
+            && $this->access->registrarCanReview($student);
     }
 }

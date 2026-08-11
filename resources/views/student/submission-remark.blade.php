@@ -24,7 +24,6 @@
     $pendingCount = $assignedCount - $approvedCount;
 @endphp
 <div class="submission-workspace">
-    <div class="submission-section-title"><div><h2>Submission & Remark</h2><p>Upload work for each subject and keep your instructor’s latest feedback visible.</p></div><span class="submission-count">{{ $assignedCount }} assigned subjects</span></div>
     @if(isset($errors) && $errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 
     <div class="submission-summary">

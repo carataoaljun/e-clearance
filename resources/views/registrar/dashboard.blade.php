@@ -78,15 +78,15 @@
 @endphp
 <div class="page-content registrar-dashboard">
     <div class="registrar-metrics">
-        <div class="metric-card registrar-metric"><div class="metric-top"><div class="metric-copy"><small>Total Students</small><strong>{{ number_format($totalStudents) }}</strong><span>Registered student accounts</span></div><span class="metric-symbol symbol-blue"><i class="bi bi-people"></i></span></div></div>
-        <div class="metric-card registrar-metric"><div class="metric-top"><div class="metric-copy"><small>Total Reviews</small><strong>{{ number_format($totalRequests) }}</strong><span>Clearance records tracked</span></div><span class="metric-symbol symbol-cyan"><i class="bi bi-clipboard-data"></i></span></div></div>
+        <div class="metric-card registrar-metric"><div class="metric-top"><div class="metric-copy"><small>Assigned Students</small><strong>{{ number_format($totalStudents) }}</strong><span>Students with Registrar requests</span></div><span class="metric-symbol symbol-blue"><i class="bi bi-people"></i></span></div></div>
+        <div class="metric-card registrar-metric"><div class="metric-top"><div class="metric-copy"><small>Total Reviews</small><strong>{{ number_format($totalRequests) }}</strong><span>Registrar clearance records</span></div><span class="metric-symbol symbol-cyan"><i class="bi bi-clipboard-data"></i></span></div></div>
         <div class="metric-card registrar-metric"><div class="metric-top"><div class="metric-copy"><small>Awaiting Review</small><strong>{{ number_format($pendingRequests) }}</strong><span>Requests still pending</span></div><span class="metric-symbol symbol-amber"><i class="bi bi-hourglass-split"></i></span></div></div>
         <div class="metric-card registrar-metric"><div class="metric-top"><div class="metric-copy"><small>Cleared</small><strong>{{ number_format($clearedRequests) }}</strong><span>Approved clearance records</span></div><span class="metric-symbol symbol-green"><i class="bi bi-patch-check"></i></span></div></div>
     </div>
 
     <div class="registrar-grid">
         <section class="card dashboard-panel">
-            <div class="panel-heading"><div><h5>Clearance completion</h5><p>Overall status of clearance records across the college.</p></div><span class="completion-rate">{{ $clearedPct }}% cleared</span></div>
+            <div class="panel-heading"><div><h5>Registrar clearance completion</h5><p>Status of requests assigned to the Registrar.</p></div><span class="completion-rate">{{ $clearedPct }}% cleared</span></div>
             <div class="status-track"><span class="track-cleared" style="width:{{ $clearedPct }}%"></span><span class="track-pending" style="width:{{ $pendingPct }}%"></span></div>
             <div class="status-summary">
                 <div class="status-box"><span class="status-dot bg-success"></span><div><strong>{{ $clearedRequests }} Cleared</strong><small>Final approvals completed</small></div></div>
@@ -104,7 +104,7 @@
     </div>
 
     <section class="card program-panel">
-        <div class="panel-heading"><div><h5>Students by program</h5><p>Enrollment distribution across academic programs.</p></div><span class="small text-secondary">{{ $studentsByProgram->count() }} programs</span></div>
+        <div class="panel-heading"><div><h5>Assigned requests by program</h5><p>Program distribution for students in the Registrar clearance queue.</p></div><span class="small text-secondary">{{ $studentsByProgram->count() }} programs</span></div>
         <div class="program-grid">
             @forelse($studentsByProgram as $program)
                 @php $programPct = $totalStudents ? (int) round(($program->total / $totalStudents) * 100) : 0; @endphp

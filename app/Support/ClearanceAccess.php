@@ -47,31 +47,49 @@ final class ClearanceAccess
             return false;
         }
 
-        if ($officeRole !== 'dean') {
-            return true;
+        if ($officeRole === 'dean') {
+            $program = $this->programHeadProgram($office);
+
+            if ($program === null || ! $this->sameValue($student->program, $program)) {
+                return false;
+            }
         }
 
-        $program = $this->programHeadProgram($office);
-
-        return $program !== null
-            && $this->sameValue($student->program, $program);
+        return $this->studentHasOfficeRequest($student, $officeRole);
     }
 
     public function treasurerCanReview(object $treasurer, StudentAccount $student): bool
     {
         $type = strtolower(trim((string) ($treasurer->treasurer_type ?? '')));
 
+        $withinAssignment = false;
+
         if ($type === 'section') {
-            return $this->sameValue($student->program, $treasurer->program ?? null)
+            $withinAssignment = $this->sameValue($student->program, $treasurer->program ?? null)
                 && $this->sameValue($student->year_level, $treasurer->year_level ?? null)
                 && $this->sameValue($student->section, $treasurer->section ?? null);
         }
 
         if ($type === 'department') {
-            return $this->sameValue($student->program, $treasurer->department ?? null);
+            $withinAssignment = $this->sameValue($student->program, $treasurer->department ?? null);
         }
 
-        return false;
+        return $withinAssignment
+            && $this->studentHasOfficeRequest($student, $this->treasurerOfficeRole($treasurer));
+    }
+
+    public function registrarCanReview(StudentAccount $student): bool
+    {
+        return $this->studentHasOfficeRequest($student, 'registrar');
+    }
+
+    public function treasurerOfficeRole(object $treasurer): string
+    {
+        return match (strtolower(trim((string) ($treasurer->treasurer_type ?? '')))) {
+            'section' => 'section treasurer',
+            'department' => 'department treasurer',
+            default => '',
+        };
     }
 
     public function officeRole(?object $office): string
@@ -187,5 +205,17 @@ final class ClearanceAccess
         $right = strtolower(trim((string) $right));
 
         return $left !== '' && $right !== '' && hash_equals($left, $right);
+    }
+
+    private function studentHasOfficeRequest(StudentAccount $student, string $officeRole): bool
+    {
+        if ($officeRole === '') {
+            return false;
+        }
+
+        return DB::table('office_clearance_status')
+            ->where('student_id', $student->student_id)
+            ->whereRaw('LOWER(TRIM(office_role)) = ?', [$officeRole])
+            ->exists();
     }
 }

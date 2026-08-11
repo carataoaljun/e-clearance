@@ -4,11 +4,6 @@
 
 @section('content')
 <div class="submission-workspace">
-    <div class="submission-section-title">
-        <div><h2>Submission & Remark</h2><p>Review submitted files, record feedback, and update student clearance status.</p></div>
-        <span class="submission-count">{{ $submissions->total() }} records</span>
-    </div>
-
     <div class="submission-summary">
         <article class="clearance-stat total"><div class="clearance-stat-main"><span class="clearance-stat-icon"><i class="bi bi-files"></i></span><div class="clearance-stat-copy"><small>Submitted</small><strong>{{ number_format($stats->total ?? 0) }}</strong><span>Files received for review</span></div></div></article>
         <article class="clearance-stat approved"><div class="clearance-stat-main"><span class="clearance-stat-icon"><i class="bi bi-check-circle"></i></span><div class="clearance-stat-copy"><small>Approved</small><strong>{{ number_format($stats->approved ?? 0) }}</strong><span>Completed reviews</span></div></div></article>

@@ -11,6 +11,7 @@ use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -66,6 +67,7 @@ class ClearanceFormController extends Controller
     public function registrar(string $studentId)
     {
         $student = StudentAccount::where('student_id', $studentId)->firstOrFail();
+        Gate::forUser(Auth::guard('registrar')->user())->authorize('reviewRegistrar', $student);
 
         return view('clearance.form', $this->dataFor($student, true));
     }
@@ -73,6 +75,7 @@ class ClearanceFormController extends Controller
     public function verify(string $studentId)
     {
         $student = StudentAccount::where('student_id', $studentId)->firstOrFail();
+        Gate::forUser(Auth::guard('registrar')->user())->authorize('reviewRegistrar', $student);
 
         return view('clearance.form', $this->dataFor($student, true));
     }

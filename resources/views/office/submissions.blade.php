@@ -2,10 +2,10 @@
 
 @section('title', 'Office Submissions & Remark')
 @section('portal-name', 'Office Portal')
-@section('portal-subtitle', $office->office)
-@section('page-title', 'Submissions & Remark')
+@section('portal-subtitle', ucwords($officeName))
+@section('page-title', ucwords($officeName) . ' Submissions & Remark')
 @section('user-label', $office->full_name)
-@section('user-role', $office->role)
+@section('user-role', ucwords($officeName))
 @push('styles')<link href="{{ asset('css/clearance_workspace.css') }}" rel="stylesheet">@endpush
 
 @section('nav')
@@ -24,7 +24,6 @@
     $pendingSubmissions = $submissions->count() - $approvedSubmissions;
 @endphp
 <div class="submission-workspace">
-    <div class="submission-section-title"><div><h2>Submission & Remark</h2><p>Review office documents, record feedback, and update clearance status.</p></div><span class="submission-count">{{ $submissions->count() }} submissions</span></div>
     <div class="submission-summary">
         <article class="clearance-stat total"><div class="clearance-stat-main"><span class="clearance-stat-icon"><i class="bi bi-files"></i></span><div class="clearance-stat-copy"><small>Submitted</small><strong>{{ $submissions->count() }}</strong><span>Files received by this office</span></div></div></article>
         <article class="clearance-stat approved"><div class="clearance-stat-main"><span class="clearance-stat-icon"><i class="bi bi-check-circle"></i></span><div class="clearance-stat-copy"><small>Approved</small><strong>{{ $approvedSubmissions }}</strong><span>Completed reviews</span></div></div></article>
