@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Registrar;
 
+use App\Http\Controllers\Concerns\ReportsClearanceRefusals;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\StudentAccount;
@@ -11,10 +12,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class StudentClearanceController extends Controller
 {
+    use ReportsClearanceRefusals;
+
     public function index(Request $request)
     {
         $registrar = Auth::guard('registrar')->user();
@@ -81,9 +83,10 @@ class StudentClearanceController extends Controller
         Gate::forUser($registrar)->authorize('reviewRegistrar', $student);
 
         if ($data['status'] === 'Approved' && ! ClearanceWorkflow::prerequisitesMet($student, 'registrar')) {
-            throw ValidationException::withMessages([
-                'status' => 'Registrar approval requires every earlier clearance to be approved.',
-            ]);
+            return $this->refuseClearanceChange(
+                $request,
+                'Registrar approval requires every earlier clearance to be approved.',
+            );
         }
 
         DB::transaction(function () use ($data, $registrar): void {

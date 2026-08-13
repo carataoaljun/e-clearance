@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Office;
 
+use App\Http\Controllers\Concerns\ReportsClearanceRefusals;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\StudentAccount;
@@ -13,10 +14,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class DashboardController extends Controller
 {
+    use ReportsClearanceRefusals;
+
     public function index()
     {
         $office = Auth::guard('office')->user();
@@ -227,9 +229,10 @@ class DashboardController extends Controller
         Gate::forUser($office)->authorize('reviewOffice', $student);
 
         if ($data['status'] === 'Approved' && ! ClearanceWorkflow::prerequisitesMet($student, $officeRole)) {
-            throw ValidationException::withMessages([
-                'status' => 'This clearance cannot be approved until its required earlier clearances are complete.',
-            ]);
+            return $this->refuseClearanceChange(
+                $request,
+                'This clearance cannot be approved until its required earlier clearances are complete.',
+            );
         }
 
         $officeLabel = ucwords(str_replace('_', ' ', $officeRole));
