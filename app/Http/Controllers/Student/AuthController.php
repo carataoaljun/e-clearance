@@ -7,6 +7,7 @@ use App\Models\StudentAccount;
 use App\Support\AuditLogger;
 use App\Support\LoginSecurity;
 use App\Support\PostLogout;
+use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -33,8 +34,8 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'student_id' => ['required', 'string', 'max:50'],
-            'password' => ['required', 'string', 'max:128'],
-        ]);
+            'password' => StrongPassword::loginRules(),
+        ], StrongPassword::loginMessages());
 
         $security = LoginSecurity::for($request, 'student', $credentials['student_id']);
         $security->assertNotLocked('student_id');

@@ -7,6 +7,7 @@ use App\Models\MainAdmin;
 use App\Support\AuditLogger;
 use App\Support\LoginSecurity;
 use App\Support\PostLogout;
+use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -24,8 +25,8 @@ class AdminAuthController extends Controller
     {
         $credentials = $request->validate([
             'email' => ['required', 'email', 'max:100'],
-            'password' => ['required', 'string', 'max:128'],
-        ]);
+            'password' => StrongPassword::loginRules(),
+        ], StrongPassword::loginMessages());
 
         $security = LoginSecurity::for($request, 'admin', $credentials['email']);
         $security->assertNotLocked('email');

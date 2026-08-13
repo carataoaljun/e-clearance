@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminPersonnel;
 use App\Support\LoginSecurity;
 use App\Support\PostLogout;
+use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -25,9 +26,9 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'login' => ['required', 'string', 'max:100'], // personnel_id or email
-            'password' => ['required', 'string', 'max:128'],
+            'password' => StrongPassword::loginRules(),
             'role' => ['required', 'string', 'in:'.implode(',', array_keys(AdminPersonnel::$validRoles))],
-        ]);
+        ], StrongPassword::loginMessages());
 
         $personnel = AdminPersonnel::where('email', $credentials['login'])
             ->orWhere('personnel_id', $credentials['login'])

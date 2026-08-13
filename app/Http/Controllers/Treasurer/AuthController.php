@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Treasurer;
 use App\Support\LoginSecurity;
 use App\Support\PostLogout;
+use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -25,9 +26,9 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'login' => ['required', 'string', 'max:100'], // treasurer_id or email
-            'password' => ['required', 'string', 'max:128'],
+            'password' => StrongPassword::loginRules(),
             'treasurer_type' => ['required', 'string', 'in:department,section'],
-        ]);
+        ], StrongPassword::loginMessages());
 
         $treasurer = Treasurer::where('email', $credentials['login'])
             ->orWhere('treasurer_id', $credentials['login'])

@@ -424,7 +424,7 @@
                         <div class="field">
                             <i class="bi bi-lock" aria-hidden="true"></i>
                             <label for="password" hidden>Password</label>
-                            <input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" maxlength="128" data-validation-label="Password" required @error('password') aria-invalid="true" @enderror>
+                            <input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password" minlength="8" maxlength="128" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}" data-validation-label="Password" data-validation-rule="strong-password" required @error('password') aria-invalid="true" @enderror>
                             <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
                         </div>
                         @if($captchaRequired)
