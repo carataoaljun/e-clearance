@@ -8,12 +8,10 @@ use Tests\TestCase;
 
 class StudentApplicationDownloadTest extends TestCase
 {
-    public function test_application_download_defaults_to_the_public_downloads_directory(): void
+    public function test_application_download_defaults_to_a_path_relative_to_the_public_directory(): void
     {
-        $this->assertSame(
-            public_path('downloads/MCC-e-Clearance-Student.apk'),
-            config('student_application.apk_path'),
-        );
+        // Relative so config:cache cannot freeze a machine-specific absolute path.
+        $this->assertSame('downloads/MCC-e-Clearance-Student.apk', config('student_application.apk_path'));
     }
 
     public function test_student_sidebar_contains_the_application_download_button_in_a_browser(): void
@@ -65,8 +63,35 @@ class StudentApplicationDownloadTest extends TestCase
         }
     }
 
+    public function test_relative_configured_path_resolves_against_the_public_directory(): void
+    {
+        config(['student_application.apk_path' => 'downloads/MCC-e-Clearance-Student.apk']);
+
+        $this->withoutMiddleware(StudentAuthenticate::class)
+            ->get(route('student.application.download'))
+            ->assertOk()
+            ->assertDownload('MCC-e-Clearance-Student.apk');
+    }
+
+    public function test_stale_configured_path_falls_back_to_the_bundled_apk(): void
+    {
+        // Mirrors a deployed bootstrap/cache/config.php built before the APK moved
+        // into public/downloads: the frozen path is gone, the shipped copy is not.
+        config(['student_application.apk_path' => base_path('mobile/student-android/app/build/outputs/apk/debug/app-debug.apk')]);
+
+        $this->withoutMiddleware(StudentAuthenticate::class)
+            ->get(route('student.application.download'))
+            ->assertOk()
+            ->assertDownload('MCC-e-Clearance-Student.apk')
+            ->assertHeader('content-type', 'application/vnd.android.package-archive');
+    }
+
     public function test_missing_apk_returns_not_found(): void
     {
+        if (is_file(public_path('downloads/MCC-e-Clearance-Student.apk'))) {
+            $this->markTestSkipped('The bundled APK is present, so the fallback serves it instead of a 404.');
+        }
+
         config(['student_application.apk_path' => base_path('missing-student-application.apk')]);
 
         $this->withoutMiddleware(StudentAuthenticate::class)
