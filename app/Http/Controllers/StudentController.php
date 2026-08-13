@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProgramSection;
 use App\Models\Student;
+use App\Support\PersonName;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -57,9 +58,9 @@ class StudentController extends Controller
     {
         $data = $request->validate([
             'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:student_account,student_id'],
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'middlename' => ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'middlename' => PersonName::optionalRules(),
+            'lastname' => PersonName::requiredRules(),
             'suffix' => ['nullable', 'string', 'max:10', 'regex:/^[\pL\pN.\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:student_account,email'],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
@@ -70,6 +71,7 @@ class StudentController extends Controller
         ], [
             'student_id.unique' => 'This student ID is already in use.',
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'middlename', 'lastname'),
         ]);
 
         $plainPassword = ! empty($data['password']) ? $data['password'] : StrongPassword::generate();
@@ -85,9 +87,9 @@ class StudentController extends Controller
         $student = Student::where('student_id', $student_id)->firstOrFail();
 
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'middlename' => ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'middlename' => PersonName::optionalRules(),
+            'lastname' => PersonName::requiredRules(),
             'suffix' => ['nullable', 'string', 'max:10', 'regex:/^[\pL\pN.\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('student_account', 'email')->ignore($student->id)],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
@@ -97,6 +99,7 @@ class StudentController extends Controller
             'student_type' => ['required', Rule::in(['Regular', 'Irregular'])],
         ], [
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'middlename', 'lastname'),
         ]);
 
         if (! empty($data['password'])) {

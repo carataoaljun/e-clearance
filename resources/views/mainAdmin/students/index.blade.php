@@ -129,11 +129,11 @@
                     <div class="fg"><label>Email *</label><input type="email" name="email" required autocomplete="off"></div>
                 </div>
                 <div class="form-row">
-                    <div class="fg"><label>First Name *</label><input name="firstname" required autocomplete="off"></div>
-                    <div class="fg"><label>Middle Name</label><input name="middlename" autocomplete="off"></div>
+                    <div class="fg"><label>First Name *</label><input name="firstname" required autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
+                    <div class="fg"><label>Middle Name</label><input name="middlename" autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                 </div>
                 <div class="form-row">
-                    <div class="fg"><label>Last Name *</label><input name="lastname" required autocomplete="off"></div>
+                    <div class="fg"><label>Last Name *</label><input name="lastname" required autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                     <div class="fg"><label>Suffix</label><input name="suffix" autocomplete="off"></div>
                 </div>
                 <div class="form-row">
@@ -192,11 +192,11 @@
                     <div class="fg"><label>Email *</label><input type="email" name="email" id="e_email" required autocomplete="off"></div>
                 </div>
                 <div class="form-row">
-                    <div class="fg"><label>First Name *</label><input name="firstname" id="e_firstname" required autocomplete="off"></div>
-                    <div class="fg"><label>Middle Name</label><input name="middlename" id="e_middlename" autocomplete="off"></div>
+                    <div class="fg"><label>First Name *</label><input name="firstname" id="e_firstname" required autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
+                    <div class="fg"><label>Middle Name</label><input name="middlename" id="e_middlename" autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                 </div>
                 <div class="form-row">
-                    <div class="fg"><label>Last Name *</label><input name="lastname" id="e_lastname" required autocomplete="off"></div>
+                    <div class="fg"><label>Last Name *</label><input name="lastname" id="e_lastname" required autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                     <div class="fg"><label>Suffix</label><input name="suffix" id="e_suffix" autocomplete="off"></div>
                 </div>
                 <div class="form-row">

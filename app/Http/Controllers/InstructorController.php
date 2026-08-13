@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Instructor;
+use App\Support\PersonName;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -43,9 +44,9 @@ class InstructorController extends Controller
     {
         $data = $request->validate([
             'instructor_id' => ['required', 'regex:/^\d{4}$/', 'unique:instructor_account,instructor_id'],
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'middlename' => ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'middlename' => PersonName::optionalRules(),
+            'lastname' => PersonName::requiredRules(),
             'suffix' => ['nullable', 'string', 'max:10', 'regex:/^[\pL\pN.\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:instructor_account,email'],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
@@ -53,6 +54,7 @@ class InstructorController extends Controller
         ], [
             'instructor_id.unique' => 'This employee ID is already in use.',
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'middlename', 'lastname'),
         ]);
         $plainPassword = ! empty($data['password']) ? $data['password'] : StrongPassword::generate();
         $data['password'] = Hash::make($plainPassword);
@@ -65,15 +67,16 @@ class InstructorController extends Controller
     {
         $inst = Instructor::where('instructor_id', $instructor_id)->firstOrFail();
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'middlename' => ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'middlename' => PersonName::optionalRules(),
+            'lastname' => PersonName::requiredRules(),
             'suffix' => ['nullable', 'string', 'max:10', 'regex:/^[\pL\pN.\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('instructor_account', 'email')->ignore($inst->id)],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'department' => 'required|in:BSIT,BSED,BEED,BSBA,BSHM',
         ], [
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'middlename', 'lastname'),
         ]);
         if (! empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);

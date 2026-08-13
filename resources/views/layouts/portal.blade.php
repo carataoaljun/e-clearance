@@ -348,18 +348,18 @@
             <div class="form-row">
                 <div>
                     <label class="form-label">First Name</label>
-                    <input type="text" name="firstname" class="form-control" value="{{ old('firstname', $user->firstname ?? '') }}" required>
+                    <input type="text" name="firstname" class="form-control" value="{{ old('firstname', $user->firstname ?? '') }}" required pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}">
                 </div>
                 <div>
                     <label class="form-label">Last Name</label>
-                    <input type="text" name="lastname" class="form-control" value="{{ old('lastname', $user->lastname ?? '') }}" required>
+                    <input type="text" name="lastname" class="form-control" value="{{ old('lastname', $user->lastname ?? '') }}" required pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}">
                 </div>
             </div>
 
             <div class="form-row">
                 <div>
                     <label class="form-label">Middle Name</label>
-                    <input type="text" name="middlename" class="form-control" value="{{ old('middlename', $user->middlename ?? '') }}">
+                    <input type="text" name="middlename" class="form-control" value="{{ old('middlename', $user->middlename ?? '') }}" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}">
                 </div>
                 <div>
                     <label class="form-label">Suffix</label>

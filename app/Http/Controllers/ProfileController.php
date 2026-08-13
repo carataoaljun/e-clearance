@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MainAdmin;
+use App\Support\PersonName;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,7 @@ class ProfileController extends Controller
     {
         $admin = MainAdmin::findOrFail($request->session()->get('admin_id'));
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => PersonName::requiredRules(255),
             'email' => [
                 'required',
                 'string',
@@ -40,7 +41,7 @@ class ProfileController extends Controller
                 Rule::unique('main_admin', 'email')->ignore($admin->id),
             ],
             'current_password' => ['nullable', 'string', 'max:255'],
-        ]);
+        ], PersonName::messages('name'));
 
         if (! hash_equals(strtolower((string) $admin->email), strtolower($data['email']))
             && ! Hash::check((string) ($data['current_password'] ?? ''), (string) $admin->password)) {

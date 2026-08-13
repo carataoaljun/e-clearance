@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProgramSection;
 use App\Models\Treasurer;
+use App\Support\PersonName;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -47,9 +48,9 @@ class TreasurerController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'middlename' => ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'middlename' => PersonName::optionalRules(),
+            'lastname' => PersonName::requiredRules(),
             'suffix' => ['nullable', 'string', 'max:10', 'regex:/^[\pL\pN.\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:treasurers,email'],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
@@ -60,6 +61,7 @@ class TreasurerController extends Controller
             'section' => 'nullable|required_if:treasurer_type,section|string|max:50',
         ], [
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'middlename', 'lastname'),
         ]);
 
         $plainPassword = ! empty($data['password']) ? $data['password'] : StrongPassword::generate();
@@ -75,9 +77,9 @@ class TreasurerController extends Controller
         $treasurer = Treasurer::findOrFail($id);
 
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'middlename' => ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'middlename' => PersonName::optionalRules(),
+            'lastname' => PersonName::requiredRules(),
             'suffix' => ['nullable', 'string', 'max:10', 'regex:/^[\pL\pN.\s\'\-]+$/u'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('treasurers', 'email')->ignore($id)],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
@@ -88,6 +90,7 @@ class TreasurerController extends Controller
             'section' => 'nullable|required_if:treasurer_type,section|string|max:50',
         ], [
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'middlename', 'lastname'),
         ]);
 
         if (! empty($data['password'])) {

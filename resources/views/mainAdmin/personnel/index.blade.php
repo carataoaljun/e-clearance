@@ -76,8 +76,8 @@
             <form method="POST" action="{{ route('personnel.store') }}" autocomplete="off">
                 @csrf
                 <div class="form-row">
-                    <div class="fg"><label>First Name</label><input type="text" name="firstname" required></div>
-                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" required></div>
+                    <div class="fg"><label>First Name</label><input type="text" name="firstname" required pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
+                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" required pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                 </div>
                 <div class="form-row">
                     <div class="fg"><label>Email</label><input type="email" name="email" required></div>
@@ -111,8 +111,8 @@
             <form method="POST" id="editForm" autocomplete="off">
                 @csrf @method('PUT')
                 <div class="form-row">
-                    <div class="fg"><label>First Name</label><input type="text" name="firstname" id="e_firstname" required></div>
-                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" id="e_lastname" required></div>
+                    <div class="fg"><label>First Name</label><input type="text" name="firstname" id="e_firstname" required pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
+                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" id="e_lastname" required pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                 </div>
                 <div class="form-row">
                     <div class="fg"><label>Email</label><input type="email" name="email" id="e_email" required></div>

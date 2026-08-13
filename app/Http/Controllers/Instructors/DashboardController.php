@@ -10,6 +10,7 @@ use App\Models\InstructorRemark;
 use App\Models\Notification;
 use App\Models\StudentAccount;
 use App\Models\StudentSubmission;
+use App\Support\PersonName;
 use App\Support\SecureUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -240,16 +241,16 @@ class DashboardController extends Controller
         $instructor = Auth::guard('instructor')->user();
 
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'middlename' => ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'lastname' => PersonName::requiredRules(),
+            'middlename' => PersonName::optionalRules(),
             'suffix' => 'nullable|string|max:10',
             'email' => ['required', 'email', Rule::unique('instructor_account', 'email')->ignore($instructor->getAttribute('instructor_id'), 'instructor_id')],
             'department' => ['required', Rule::in(['BSIT', 'BSED', 'BEED', 'BSBA', 'BSHM'])],
             'current_password' => 'nullable|string',
             'new_password' => ['nullable', Password::min(8)->mixedCase()->numbers()->symbols()],
             'confirm_password' => 'nullable|same:new_password',
-        ]);
+        ], PersonName::messages('firstname', 'middlename', 'lastname'));
 
         $emailChanged = ! hash_equals(
             strtolower((string) $instructor->getAttribute('email')),

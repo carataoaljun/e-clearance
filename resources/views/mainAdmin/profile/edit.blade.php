@@ -28,7 +28,7 @@
             @method('PATCH')
             <div class="mb-3">
                 <label for="admin_name" class="form-label">Name</label>
-                <input id="admin_name" name="name" class="form-control" value="{{ old('name', $user->name) }}" required maxlength="255">
+                <input id="admin_name" name="name" class="form-control" value="{{ old('name', $user->name) }}" required maxlength="255" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}">
                 @error('name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
             </div>
             <div class="mb-4">

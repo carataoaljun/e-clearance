@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Registrar;
+use App\Support\PersonName;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,12 +31,13 @@ class RegistrarController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'lastname' => PersonName::requiredRules(),
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:registrar,email'],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
         ], [
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'lastname'),
         ]);
         $plainPassword = ! empty($data['password']) ? $data['password'] : StrongPassword::generate();
         $data['password'] = Hash::make($plainPassword);
@@ -50,12 +52,13 @@ class RegistrarController extends Controller
     {
         $r = Registrar::findOrFail($id);
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'lastname' => PersonName::requiredRules(),
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('registrar', 'email')->ignore($id)],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
         ], [
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'lastname'),
         ]);
         if (! empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);

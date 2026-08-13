@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\PersonName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -16,7 +17,7 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => PersonName::requiredRules(255),
             'email' => [
                 'required',
                 'string',
@@ -26,5 +27,13 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique('main_admin')->ignore($this->user()->id),
             ],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return PersonName::messages('name');
     }
 }

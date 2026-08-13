@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AdminPersonnel;
+use App\Support\PersonName;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -37,14 +38,15 @@ class AdminPersonnelController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'lastname' => PersonName::requiredRules(),
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:admin_personnel,email'],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'office' => ['nullable', 'string', 'max:100'],
             'role' => ['required', Rule::in(array_keys(AdminPersonnel::$validRoles))],
         ], [
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'lastname'),
         ]);
 
         $plainPassword = ! empty($data['password']) ? $data['password'] : StrongPassword::generate();
@@ -60,14 +62,15 @@ class AdminPersonnelController extends Controller
     {
         $p = AdminPersonnel::findOrFail($id);
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'lastname' => PersonName::requiredRules(),
             'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('admin_personnel', 'email')->ignore($id)],
             'password' => ['nullable', 'string', 'max:128', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'office' => ['nullable', 'string', 'max:100'],
             'role' => ['required', Rule::in(array_keys(AdminPersonnel::$validRoles))],
         ], [
             'email.unique' => 'This email address is already in use.',
+            ...PersonName::messages('firstname', 'lastname'),
         ]);
         if (! empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);

@@ -103,11 +103,11 @@
                     <div class="fg"><label>Email</label><input type="email" name="email" required autocomplete="off"></div>
                 </div>
                 <div class="form-row">
-                    <div class="fg"><label>First Name</label><input type="text" name="firstname" required autocomplete="off"></div>
-                    <div class="fg"><label>Middle Name</label><input type="text" name="middlename" autocomplete="off"></div>
+                    <div class="fg"><label>First Name</label><input type="text" name="firstname" required autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
+                    <div class="fg"><label>Middle Name</label><input type="text" name="middlename" autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                 </div>
                 <div class="form-row">
-                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" required autocomplete="off"></div>
+                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" required autocomplete="off" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                     <div class="fg"><label>Suffix</label><input type="text" name="suffix" autocomplete="off"></div>
                 </div>
                 <div class="form-row">
@@ -140,11 +140,11 @@
             <form method="POST" id="editForm" autocomplete="off">
                 @csrf @method('PUT')
                 <div class="form-row">
-                    <div class="fg"><label>First Name</label><input type="text" name="firstname" id="e_firstname" required></div>
-                    <div class="fg"><label>Middle Name</label><input type="text" name="middlename" id="e_middlename"></div>
+                    <div class="fg"><label>First Name</label><input type="text" name="firstname" id="e_firstname" required pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
+                    <div class="fg"><label>Middle Name</label><input type="text" name="middlename" id="e_middlename" pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                 </div>
                 <div class="form-row">
-                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" id="e_lastname" required></div>
+                    <div class="fg"><label>Last Name</label><input type="text" name="lastname" id="e_lastname" required pattern="{{ \App\Support\PersonName::PATTERN }}" title="{{ \App\Support\PersonName::REQUIREMENT_MESSAGE }}"></div>
                     <div class="fg"><label>Suffix</label><input type="text" name="suffix" id="e_suffix"></div>
                 </div>
                 <div class="form-row">

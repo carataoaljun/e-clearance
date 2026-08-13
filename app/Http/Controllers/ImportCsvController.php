@@ -10,6 +10,7 @@ use App\Models\Registrar;
 use App\Models\Student;
 use App\Models\SubjectCode;
 use App\Models\Treasurer;
+use App\Support\PersonName;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -797,13 +798,13 @@ class ImportCsvController extends Controller
     /** @return list<string> */
     private function requiredNameRules(): array
     {
-        return ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'];
+        return PersonName::requiredRules();
     }
 
     /** @return list<string> */
     private function middleNameRules(): array
     {
-        return ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'];
+        return PersonName::optionalRules();
     }
 
     /** @return list<string> */

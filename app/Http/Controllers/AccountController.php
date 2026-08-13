@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PersonName;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,9 +42,9 @@ class AccountController extends Controller
         $userKey = $user->getKey();
 
         $data = $request->validate([
-            'firstname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'lastname' => ['required', 'string', 'min:2', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
-            'middlename' => ['nullable', 'string', 'max:20', 'regex:/^[\pL\s\'\-]+$/u'],
+            'firstname' => PersonName::requiredRules(),
+            'lastname' => PersonName::requiredRules(),
+            'middlename' => PersonName::optionalRules(),
             'suffix' => ['nullable', 'string', 'max:25'],
             'email' => [
                 'required',
@@ -54,7 +55,7 @@ class AccountController extends Controller
             ],
             'password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'current_password' => ['nullable', 'string', 'max:255'],
-        ]);
+        ], PersonName::messages('firstname', 'middlename', 'lastname'));
 
         $emailChanged = ! hash_equals(strtolower((string) $user->email), strtolower($data['email']));
         if (($emailChanged || ! empty($data['password']))
