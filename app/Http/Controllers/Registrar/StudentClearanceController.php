@@ -21,8 +21,10 @@ class StudentClearanceController extends Controller
     {
         $registrar = Auth::guard('registrar')->user();
 
+        // Inner join: a clearance row whose student was deleted has no name and no
+        // student_id to build links from, and would break every route() in the view.
         $baseQuery = DB::table('office_clearance_status')
-            ->leftJoin('student_account', 'office_clearance_status.student_id', '=', 'student_account.student_id')
+            ->join('student_account', 'office_clearance_status.student_id', '=', 'student_account.student_id')
             ->whereRaw("LOWER(TRIM(office_clearance_status.office_role)) = 'registrar'");
 
         $pendingCount = (clone $baseQuery)->where('office_clearance_status.status', '<>', 'Approved')->count();

@@ -25,7 +25,7 @@ class DashboardController extends Controller
         $officeName = $this->getOfficeRole($office);
 
         $clearanceQuery = DB::table('office_clearance_status')
-            ->leftJoin('student_account', 'office_clearance_status.student_id', '=', 'student_account.student_id')
+            ->join('student_account', 'office_clearance_status.student_id', '=', 'student_account.student_id')
             ->whereRaw('LOWER(TRIM(office_clearance_status.office_role)) = ?', [$officeName]);
         $this->access()->scopeOfficeStudents($clearanceQuery, $office);
 
@@ -51,7 +51,7 @@ class DashboardController extends Controller
             ->get();
 
         $submissionQuery = DB::table('office_submissions')
-            ->leftJoin('student_account', 'office_submissions.student_id', '=', 'student_account.student_id')
+            ->join('student_account', 'office_submissions.student_id', '=', 'student_account.student_id')
             ->whereRaw('LOWER(TRIM(office_submissions.office)) = ?', [$officeName]);
         $this->access()->scopeOfficeStudents($submissionQuery, $office);
 
@@ -98,7 +98,7 @@ class DashboardController extends Controller
         $officeName = $this->getOfficeRole($office);
 
         $submissionQuery = DB::table('office_submissions')
-            ->leftJoin('student_account', 'office_submissions.student_id', '=', 'student_account.student_id')
+            ->join('student_account', 'office_submissions.student_id', '=', 'student_account.student_id')
             ->whereRaw('LOWER(TRIM(office_submissions.office)) = ?', [$officeName]);
         $this->access()->scopeOfficeStudents($submissionQuery, $office);
 
@@ -118,7 +118,7 @@ class DashboardController extends Controller
             ->get();
 
         $remarksQuery = DB::table('office_clearance_status')
-            ->leftJoin('student_account', 'office_clearance_status.student_id', '=', 'student_account.student_id')
+            ->join('student_account', 'office_clearance_status.student_id', '=', 'student_account.student_id')
             ->whereRaw('LOWER(TRIM(office_clearance_status.office_role)) = ?', [$officeName]);
         $this->access()->scopeOfficeStudents($remarksQuery, $office);
 
@@ -147,7 +147,7 @@ class DashboardController extends Controller
         $officeRole = $this->getOfficeRole($office);
 
         $query = DB::table('office_submissions')
-            ->leftJoin('student_account', 'office_submissions.student_id', '=', 'student_account.student_id')
+            ->join('student_account', 'office_submissions.student_id', '=', 'student_account.student_id')
             ->where('office_submissions.id', $submission)
             ->whereRaw('LOWER(TRIM(office_submissions.office)) = ?', [$officeRole]);
         $this->access()->scopeOfficeStudents($query, $office);
@@ -168,7 +168,7 @@ class DashboardController extends Controller
         $officeName = $this->getOfficeRole($office);
 
         $baseQuery = DB::table('office_clearance_status')
-            ->leftJoin('student_account', 'office_clearance_status.student_id', '=', 'student_account.student_id')
+            ->join('student_account', 'office_clearance_status.student_id', '=', 'student_account.student_id')
             ->whereRaw('LOWER(TRIM(office_clearance_status.office_role)) = ?', [$officeName]);
         $this->access()->scopeOfficeStudents($baseQuery, $office);
 
