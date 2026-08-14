@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\SubjectCode;
+use App\Support\RecordPurge;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class SubjectCodeController extends Controller
@@ -123,9 +125,18 @@ class SubjectCodeController extends Controller
 
     public function destroy($id)
     {
-        SubjectCode::destroy($id);
+        $subject = SubjectCode::find($id);
 
-        return redirect()->route('subjects.index')->with('flash', ['type' => 'success', 'message' => 'Subject deleted.']);
+        if (! $subject) {
+            return redirect()->route('subjects.index')->with('flash', ['type' => 'error', 'message' => 'That subject no longer exists.']);
+        }
+
+        DB::transaction(function () use ($subject): void {
+            RecordPurge::subject($subject->getKey());
+            $subject->delete();
+        });
+
+        return redirect()->route('subjects.index')->with('flash', ['type' => 'success', 'message' => 'Subject and all related details deleted.']);
     }
 
     // AJAX — replaces load_subjects.php

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\AdminPersonnel;
 use App\Support\PersonName;
+use App\Support\RecordPurge;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -84,9 +86,18 @@ class AdminPersonnelController extends Controller
 
     public function destroy($id)
     {
-        AdminPersonnel::destroy($id);
+        $personnel = AdminPersonnel::find($id);
 
-        return redirect()->route('personnel.index')->with('flash', ['type' => 'success', 'message' => 'Record deleted.']);
+        if (! $personnel) {
+            return redirect()->route('personnel.index')->with('flash', ['type' => 'error', 'message' => 'That personnel record no longer exists.']);
+        }
+
+        DB::transaction(function () use ($personnel): void {
+            RecordPurge::officePersonnel((string) $personnel->personnel_id, $personnel->email);
+            $personnel->delete();
+        });
+
+        return redirect()->route('personnel.index')->with('flash', ['type' => 'success', 'message' => 'Record and all related details deleted.']);
     }
 
     private function generateId(): string

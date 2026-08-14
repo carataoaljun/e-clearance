@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Registrar;
 use App\Support\PersonName;
+use App\Support\RecordPurge;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -72,9 +74,18 @@ class RegistrarController extends Controller
 
     public function destroy($id)
     {
-        Registrar::destroy($id);
+        $registrar = Registrar::find($id);
 
-        return redirect()->route('registrar.index')->with('flash', ['type' => 'success', 'message' => 'Registrar deleted.']);
+        if (! $registrar) {
+            return redirect()->route('registrar.index')->with('flash', ['type' => 'error', 'message' => 'That registrar record no longer exists.']);
+        }
+
+        DB::transaction(function () use ($registrar): void {
+            RecordPurge::registrar((string) $registrar->registrar_id, $registrar->email);
+            $registrar->delete();
+        });
+
+        return redirect()->route('registrar.index')->with('flash', ['type' => 'success', 'message' => 'Registrar and all related details deleted.']);
     }
 
     private function generateId(): string

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\ProgramSection;
 use App\Models\Treasurer;
 use App\Support\PersonName;
+use App\Support\RecordPurge;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -106,9 +108,18 @@ class TreasurerController extends Controller
 
     public function destroy($id)
     {
-        Treasurer::destroy($id);
+        $treasurer = Treasurer::find($id);
 
-        return redirect()->route('treasurers.index')->with('flash', ['type' => 'success', 'message' => 'Treasurer deleted.']);
+        if (! $treasurer) {
+            return redirect()->route('treasurers.index')->with('flash', ['type' => 'error', 'message' => 'That treasurer record no longer exists.']);
+        }
+
+        DB::transaction(function () use ($treasurer): void {
+            RecordPurge::treasurer((string) $treasurer->treasurer_id, $treasurer->email);
+            $treasurer->delete();
+        });
+
+        return redirect()->route('treasurers.index')->with('flash', ['type' => 'success', 'message' => 'Treasurer and all related details deleted.']);
     }
 
     private function generateId(): string

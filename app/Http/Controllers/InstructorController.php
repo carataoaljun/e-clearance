@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Instructor;
 use App\Support\PersonName;
+use App\Support\RecordPurge;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -90,9 +92,18 @@ class InstructorController extends Controller
 
     public function destroy($instructor_id)
     {
-        Instructor::where('instructor_id', $instructor_id)->delete();
+        $instructor = Instructor::where('instructor_id', $instructor_id)->first();
 
-        return redirect()->route('instructors.index')->with('flash', ['type' => 'success', 'message' => 'Instructor deleted.']);
+        if (! $instructor) {
+            return redirect()->route('instructors.index')->with('flash', ['type' => 'error', 'message' => 'That instructor record no longer exists.']);
+        }
+
+        DB::transaction(function () use ($instructor): void {
+            RecordPurge::instructor((string) $instructor->instructor_id, $instructor->email);
+            $instructor->delete();
+        });
+
+        return redirect()->route('instructors.index')->with('flash', ['type' => 'success', 'message' => 'Instructor and all related details deleted.']);
     }
 
     public function reset($instructor_id)

@@ -6,6 +6,7 @@ use App\Models\Instructor;
 use App\Models\InstructorAssignment;
 use App\Models\ProgramSection;
 use App\Models\SubjectCode;
+use App\Support\RecordPurge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -122,9 +123,18 @@ class InstructorAssignmentController extends Controller
 
     public function destroy($id)
     {
-        InstructorAssignment::destroy($id);
+        $assignment = InstructorAssignment::find($id);
 
-        return redirect()->route('assignments.index')->with('flash', ['type' => 'success', 'message' => 'Assignment deleted.']);
+        if (! $assignment) {
+            return redirect()->route('assignments.index')->with('flash', ['type' => 'error', 'message' => 'That assignment no longer exists.']);
+        }
+
+        DB::transaction(function () use ($assignment): void {
+            RecordPurge::instructorAssignment($assignment);
+            $assignment->delete();
+        });
+
+        return redirect()->route('assignments.index')->with('flash', ['type' => 'success', 'message' => 'Assignment and all related details deleted.']);
     }
 
     private function ensureSubjectScope(array $data): void

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\ProgramSection;
 use App\Models\Student;
 use App\Support\PersonName;
+use App\Support\RecordPurge;
 use App\Support\StrongPassword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -116,9 +118,18 @@ class StudentController extends Controller
 
     public function destroy($student_id)
     {
-        Student::where('student_id', $student_id)->delete();
+        $student = Student::where('student_id', $student_id)->first();
 
-        return redirect()->route('students.index')->with('flash', ['type' => 'success', 'message' => 'Student record deleted.']);
+        if (! $student) {
+            return redirect()->route('students.index')->with('flash', ['type' => 'error', 'message' => 'That student record no longer exists.']);
+        }
+
+        DB::transaction(function () use ($student): void {
+            RecordPurge::student((string) $student->student_id, $student->email);
+            $student->delete();
+        });
+
+        return redirect()->route('students.index')->with('flash', ['type' => 'success', 'message' => 'Student record and all related details deleted.']);
     }
 
     public function reset($student_id)
