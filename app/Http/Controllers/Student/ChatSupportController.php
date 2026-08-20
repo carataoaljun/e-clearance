@@ -3,87 +3,114 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\ChatMessage;
-use App\Models\Notification;
+use App\Models\StudentAccount;
+use App\Support\ChatDirectory;
+use App\Support\ChatThread;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
+/**
+ * The student half of cross-role chat. A student's sidebar mixes four staff
+ * portals, so every request names the portal it is aimed at (`partner_role`)
+ * alongside the account id, and App\Support\ChatDirectory decides whether that
+ * pair is allowed to talk.
+ */
 class ChatSupportController extends Controller
 {
+    public function __construct(
+        private readonly ChatDirectory $directory = new ChatDirectory,
+        private readonly ChatThread $thread = new ChatThread,
+    ) {}
+
     public function index()
     {
-        $student = Auth::guard('student')->user();
+        $student = $this->student();
+        $viewer = $this->viewer($student);
 
-        $instructors = DB::table('instructor_assignment as ia')
-            ->join('instructor_account as iac', 'iac.instructor_id', '=', 'ia.instructor_id')
-            ->where('ia.program', $student->program)
-            ->where('ia.year_level', $student->year_level)
-            ->whereRaw('LOWER(TRIM(ia.section)) = LOWER(TRIM(?))', [$student->section])
-            ->select('iac.instructor_id', DB::raw("CONCAT(iac.firstname, ' ', iac.lastname) as instructor_name"), 'iac.department')
-            ->distinct()
-            ->orderBy('instructor_name')
-            ->get();
+        $unread = $this->thread->unreadByPartner($viewer);
+        $latest = $this->thread->latestByPartner($viewer);
 
-        $unreadCounts = ChatMessage::where('receiver_id', $student->student_id)
-            ->where('receiver_role', 'student')->where('sender_role', 'instructor')->where('is_read', 0)
-            ->selectRaw('sender_id, COUNT(*) as count')->groupBy('sender_id')->pluck('count', 'sender_id');
+        $contacts = $this->directory->staffContactsFor($student)
+            ->map(function (object $contact) use ($unread, $latest) {
+                $key = ChatThread::key($contact->role, $contact->id);
+                $contact->unread = $unread->get($key, 0);
+                $contact->preview = $latest->get($key)['message'] ?? $contact->title;
+                $contact->sort = $latest->get($key)['sort'] ?? 0;
 
-        return view('student.chat-support', compact('student', 'instructors', 'unreadCounts'));
+                return $contact;
+            })
+            ->sortByDesc('sort')
+            ->values();
+
+        return view('student.chat-support', [
+            'student' => $student,
+            'contacts' => $contacts,
+            'portalFilter' => $contacts->pluck('group')->filter()->unique()->sort()
+                ->mapWithKeys(fn (string $group) => [strtolower($group) => $group])->all(),
+        ]);
     }
 
-    public function send(Request $request)
+    public function messages(Request $request): JsonResponse
     {
-        $student = Auth::guard('student')->user();
-        $data = $request->validate(['receiver_id' => 'required|string', 'message' => 'required|string|max:2000']);
-        abort_unless($this->isAssignedInstructor($student, $data['receiver_id']), 403);
+        $student = $this->student();
+        $partner = $this->authorizedPartner($student, $request->all());
 
-        ChatMessage::create([
-            'sender_id' => $student->student_id, 'sender_role' => 'student',
-            'receiver_id' => $data['receiver_id'], 'receiver_role' => 'instructor',
-            'message' => $data['message'],
+        return response()->json($this->thread->messages(
+            $this->viewer($student),
+            $partner,
+            (int) $request->query('since', 0),
+        ));
+    }
+
+    public function send(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'receiver_id' => ['required', 'string', 'max:50'],
+            'partner_role' => ['required', 'string', Rule::in(ChatDirectory::STAFF_ROLES)],
+            'message' => ['required', 'string', 'max:2000'],
         ]);
 
-        Notification::create([
-            'user_id' => $data['receiver_id'],
-            'recipient_role' => 'instructor',
-            'message' => "💬 New message from {$student->full_name}",
-            'notif_type' => 'message',
-            'link_url' => route('instructor.chat'),
-        ]);
+        $student = $this->student();
+        $partner = $this->authorizedPartner($student, $data);
 
-        return response()->json(['success' => true]);
+        $message = $this->thread->send(
+            $this->viewer($student),
+            $partner,
+            $data['message'],
+            $student->full_name,
+        );
+
+        return response()->json(['success' => true, 'id' => $message->id]);
     }
 
-    public function messages(Request $request)
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array{role: string, id: string}
+     */
+    private function authorizedPartner(StudentAccount $student, array $input): array
+    {
+        $role = trim((string) ($input['partner_role'] ?? ''));
+        $id = trim((string) ($input['receiver_id'] ?? $input['with'] ?? ''));
+
+        abort_unless($id !== '' && $this->directory->permits($student, $role, $id), 403);
+
+        return ['role' => $role, 'id' => $id];
+    }
+
+    private function student(): StudentAccount
     {
         $student = Auth::guard('student')->user();
-        $with = $request->string('with')->toString();
-        abort_unless($with && $this->isAssignedInstructor($student, $with), 403);
-        $since = (int) $request->query('since', 0);
 
-        ChatMessage::where('sender_id', $with)->where('sender_role', 'instructor')
-            ->where('receiver_id', $student->student_id)->where('receiver_role', 'student')
-            ->where('is_read', 0)->update(['is_read' => 1]);
+        abort_unless($student !== null, 403);
 
-        return response()->json(ChatMessage::where(function ($conversation) use ($student, $with) {
-            $conversation->where(function ($query) use ($student, $with) {
-                $query->where('sender_id', $student->student_id)->where('sender_role', 'student')
-                    ->where('receiver_id', $with)->where('receiver_role', 'instructor');
-            })->orWhere(function ($query) use ($student, $with) {
-                $query->where('sender_id', $with)->where('sender_role', 'instructor')
-                    ->where('receiver_id', $student->student_id)->where('receiver_role', 'student');
-            });
-        })->where('id', '>', $since)->orderBy('id')->limit(100)->get()->map(fn ($message) => [
-            'id' => $message->id, 'sender_role' => $message->sender_role, 'message' => $message->message,
-            'time_fmt' => $message->created_at->format('M d, g:i A'), 'is_read' => $message->is_read,
-        ]));
+        return $student;
     }
 
-    private function isAssignedInstructor(object $student, string $instructorId): bool
+    /** @return array{role: string, id: string} */
+    private function viewer(StudentAccount $student): array
     {
-        return DB::table('instructor_assignment')->where('instructor_id', $instructorId)
-            ->where('program', $student->program)->where('year_level', $student->year_level)
-            ->whereRaw('LOWER(TRIM(section)) = LOWER(TRIM(?))', [$student->section])->exists();
+        return ['role' => 'student', 'id' => (string) $student->student_id];
     }
 }

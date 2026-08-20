@@ -96,7 +96,7 @@
             </tbody>
         </table>
     </div>
-    <div style="padding:16px 20px;">{{ $subjects->links('pagination::bootstrap-5') }}</div>
+    <div style="padding:16px 20px;">{{ $subjects->links() }}</div>
 </div>
 
 <div class="modal-overlay" id="addModal">

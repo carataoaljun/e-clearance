@@ -11,6 +11,7 @@
     <a class="nav-link active" href="{{ route('registrar.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
     <a class="nav-link" href="{{ route('registrar.student-clearance') }}"><i class="bi bi-bar-chart-line me-2"></i> Student Clearance</a>
     <a class="nav-link" href="{{ route('registrar.qr-scanner') }}"><i class="bi bi-qr-code-scan me-2"></i> QR Code Scanner</a>
+    <a class="nav-link" href="{{ route('registrar.chat') }}"><i class="bi bi-chat-square-text me-2"></i> Messages</a>
 @endsection
 
 @section('logout-form')

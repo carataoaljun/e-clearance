@@ -12,6 +12,7 @@
     <a class="nav-link" href="{{ route('treasurer.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
     <a class="nav-link" href="{{ route('treasurer.clearance-updates') }}"><i class="bi bi-bar-chart-line me-2"></i> Clearance Updates</a>
     <a class="nav-link active" href="{{ route('treasurer.submission-remark') }}"><i class="bi bi-folder2-open me-2"></i> Submission & Remark</a>
+    <a class="nav-link" href="{{ route('treasurer.chat') }}"><i class="bi bi-chat-square-text me-2"></i> Messages</a>
 @endsection
 
 @section('logout-form')

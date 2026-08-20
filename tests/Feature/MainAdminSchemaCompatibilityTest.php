@@ -34,17 +34,11 @@ class MainAdminSchemaCompatibilityTest extends TestCase
     {
         $admin = $this->createAdmin();
 
-        $this->post(route('login.post'), [
+        $this->loginThroughDeviceCode('admin', 'login.post', [
             'email' => $admin->email,
             'password' => 'Current-Admin-Password-123!',
             'remember' => true,
-        ])->assertRedirect(route('login'));
-
-        $challenge = session('admin_login_challenge');
-        $challenge['code_hash'] = Hash::make('715204');
-        $this->withSession(['admin_login_challenge' => $challenge])
-            ->post(route('login.otp.verify'), ['verification_code' => '715204'])
-            ->assertRedirect(route('dashboard'));
+        ], 'login.otp.verify', '715204')->assertRedirect(route('dashboard'));
 
         $this->assertAuthenticatedAs($admin, 'admin');
     }

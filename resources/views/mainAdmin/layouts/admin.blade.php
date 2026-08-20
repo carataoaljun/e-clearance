@@ -160,6 +160,8 @@
             <a href="{{ route('sections.index') }}" class="nav-link {{ request()->routeIs('sections*') ? 'active' : '' }}"><i class="bi bi-grid-3x3-gap"></i> Sections</a>
             <a href="{{ route('assignments.index') }}" class="nav-link {{ request()->routeIs('assignments*') ? 'active' : '' }}"><i class="bi bi-diagram-3"></i> Subject Assignments</a>
             <a href="{{ route('treasurers.index') }}" class="nav-link {{ request()->routeIs('treasurers*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> Treasurer Accounts</a>
+            <div class="nav-section">Monitoring</div>
+            <a href="{{ route('activity.index') }}" class="nav-link {{ request()->routeIs('activity*') ? 'active' : '' }}"><i class="bi bi-activity"></i> User Activity</a>
             <div class="nav-section">Communication</div>
             <a href="{{ route('chat.index') }}" class="nav-link {{ request()->routeIs('chat*') ? 'active' : '' }}"><i class="bi bi-chat-square-text"></i> Chat Support</a>
             <a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications*') ? 'active' : '' }}"><i class="bi bi-bell"></i> Notifications</a>

@@ -2,17 +2,51 @@
 
 namespace App\Http\Controllers\Treasurer;
 
+use App\Http\Controllers\Concerns\VerifiesNewDevices;
 use App\Http\Controllers\Controller;
 use App\Models\Treasurer;
 use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use App\Support\StrongPassword;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    use VerifiesNewDevices;
+
+    protected function deviceGuard(): string
+    {
+        return 'treasurer';
+    }
+
+    protected function devicePanel(): string
+    {
+        return 'Treasurer';
+    }
+
+    protected function deviceLoginRoute(): string
+    {
+        return 'treasurer.login';
+    }
+
+    protected function deviceHomeRoute(): string
+    {
+        return 'treasurer.dashboard';
+    }
+
+    protected function deviceErrorField(): string
+    {
+        return 'login';
+    }
+
+    protected function deviceAccount(string|int $id): ?Authenticatable
+    {
+        return Treasurer::find($id);
+    }
+
     public function showLogin()
     {
         if (Auth::guard('treasurer')->check()) {
@@ -43,13 +77,10 @@ class AuthController extends Controller
             $security->fail('login');
         }
 
-        Auth::guard('treasurer')->login($treasurer, $request->boolean('remember'));
         $security->clear();
         $request->session()->forget('portal_password_recovery_treasurer');
-        $request->session()->regenerate();
 
-        return redirect()->route('treasurer.dashboard')
-            ->with('login_success', 'Login successful. Welcome to the Treasurer panel.');
+        return $this->completeLogin($request, $treasurer, $request->boolean('remember'));
     }
 
     public function logout(Request $request)

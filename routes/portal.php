@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ClearanceFormController;
 use App\Http\Controllers\Registrar\AuthController as RegistrarAuthController;
+use App\Http\Controllers\Registrar\ChatController as RegistrarChatController;
 use App\Http\Controllers\Registrar\DashboardController as RegistrarDashboardController;
 use App\Http\Controllers\Registrar\StudentClearanceController as RegistrarStudentClearanceController;
 use App\Http\Controllers\Student\ApplicationDownloadController;
@@ -24,6 +25,11 @@ Route::prefix('student')->name('student.')->group(function () {
     });
     Route::get('login', [StudentAuthController::class, 'showLogin'])->name('login');
     Route::post('login', [StudentAuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
+    Route::post('login-code', [StudentAuthController::class, 'verifyLoginCode'])
+        ->middleware('throttle:otp-verify')->name('login.otp.verify');
+    Route::post('login-code/resend', [StudentAuthController::class, 'resendLoginCode'])
+        ->middleware('throttle:otp-send')->name('login.otp.resend');
+    Route::post('login-code/cancel', [StudentAuthController::class, 'cancelLoginCode'])->name('login.otp.cancel');
     Route::post('password-recovery/send-code', [StudentAuthController::class, 'sendRecoveryCode'])
         ->middleware('throttle:otp-send')->name('password-recovery.send-code');
     Route::post('password-recovery/verify-code', [StudentAuthController::class, 'verifyRecoveryCode'])
@@ -66,6 +72,11 @@ Route::prefix('registrar')->name('registrar.')->group(function () {
     });
     Route::get('login', [RegistrarAuthController::class, 'showLogin'])->name('login');
     Route::post('login', [RegistrarAuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
+    Route::post('login-code', [RegistrarAuthController::class, 'verifyLoginCode'])
+        ->middleware('throttle:otp-verify')->name('login.otp.verify');
+    Route::post('login-code/resend', [RegistrarAuthController::class, 'resendLoginCode'])
+        ->middleware('throttle:otp-send')->name('login.otp.resend');
+    Route::post('login-code/cancel', [RegistrarAuthController::class, 'cancelLoginCode'])->name('login.otp.cancel');
     Route::post('logout', [RegistrarAuthController::class, 'logout'])->middleware('registrar.auth', 'no.history')->name('logout');
 
     Route::middleware(['registrar.auth', 'no.history'])->group(function () {
@@ -77,6 +88,9 @@ Route::prefix('registrar')->name('registrar.')->group(function () {
         Route::get('qr-scanner', [RegistrarStudentClearanceController::class, 'scanner'])->name('qr-scanner');
         Route::post('student-clearance/status', [RegistrarStudentClearanceController::class, 'setClearanceStatus'])->name('student-clearance.status');
         Route::post('student-clearance/bulk-status', [RegistrarStudentClearanceController::class, 'bulkSetClearanceStatus'])->name('student-clearance.bulk-status');
+        Route::get('chat', [RegistrarChatController::class, 'index'])->name('chat');
+        Route::get('chat/messages', [RegistrarChatController::class, 'messages'])->name('chat.messages');
+        Route::post('chat/messages', [RegistrarChatController::class, 'send'])->name('chat.send');
         Route::get('account/edit', [AccountController::class, 'edit'])->name('account.edit');
         Route::put('account', [AccountController::class, 'update'])->name('account.update');
     });

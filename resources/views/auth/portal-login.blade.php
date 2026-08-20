@@ -68,9 +68,11 @@
     $recoveryState = session($recoverySessionKey, []);
     $recoveryStep = $recoveryState['stage'] ?? ((old('recovery_action') === 'email' && old('recovery_portal') === $recoveryPortal) ? 'email' : 'login');
     $activePanel = in_array($recoveryStep, ['email', 'code', 'reset'], true) ? $recoveryStep : 'login';
-    $adminLoginChallenge = $recoveryPortal === 'main-admin' ? session('admin_login_challenge') : null;
-    if (is_array($adminLoginChallenge)) $activePanel = 'admin-otp';
     $loginGuard = $recoveryPortal === 'main-admin' ? 'admin' : $recoveryPortal;
+    // Set once the password is accepted from a browser this account has not verified before.
+    $loginChallenge = session("login_challenge_{$loginGuard}");
+    if (is_array($loginChallenge)) $activePanel = 'device-otp';
+    $otpRoute = $recoveryPortal === 'main-admin' ? 'login.otp' : "{$recoveryPortal}.login.otp";
     $captchaRequired = session("login_security.captcha.{$loginGuard}", false);
     $recoveryEmail = $recoveryState['email'] ?? old('email', '');
     $emailParts = str_contains($recoveryEmail, '@') ? explode('@', $recoveryEmail, 2) : [];
@@ -80,7 +82,7 @@
         'email' => ['icon' => 'bi-envelope-check', 'title' => 'Recover Password', 'subtitle' => 'Verify the email registered to your account.'],
         'code' => ['icon' => 'bi-shield-check', 'title' => 'Check Your Email', 'subtitle' => 'Enter the six-digit verification code we sent.'],
         'reset' => ['icon' => 'bi-key', 'title' => 'Create New Password', 'subtitle' => 'Choose a strong password for your account.'],
-        'admin-otp' => ['icon' => 'bi-envelope-shield', 'title' => 'Verify Your Sign-in', 'subtitle' => 'Enter the one-time code sent to your admin email.'],
+        'device-otp' => ['icon' => 'bi-envelope-shield', 'title' => 'Verify This Device', 'subtitle' => 'Enter the one-time code sent to your registered email.'],
     ];
     $activeHeading = $panelHeadings[$activePanel];
 @endphp
@@ -161,22 +163,22 @@
                 <form method="POST" action="{{ route('portal-password-recovery.cancel', $recoveryPortal) }}">@csrf<button type="submit" class="back-button"><i class="bi bi-x-lg"></i> Cancel Password Reset</button></form>
             </div>
 
-            @if(is_array($adminLoginChallenge))
+            @if(is_array($loginChallenge))
                 @php
-                    $adminOtpEmail = (string) ($adminLoginChallenge['email'] ?? '');
-                    $adminOtpParts = str_contains($adminOtpEmail, '@') ? explode('@', $adminOtpEmail, 2) : [];
-                    $adminOtpMasked = count($adminOtpParts) === 2 ? substr($adminOtpParts[0], 0, min(2, strlen($adminOtpParts[0]))).str_repeat('•', max(3, strlen($adminOtpParts[0]) - 2)).'@'.$adminOtpParts[1] : $adminOtpEmail;
+                    $otpEmail = (string) ($loginChallenge['email'] ?? '');
+                    $otpParts = str_contains($otpEmail, '@') ? explode('@', $otpEmail, 2) : [];
+                    $otpMasked = count($otpParts) === 2 ? substr($otpParts[0], 0, min(2, strlen($otpParts[0]))).str_repeat('•', max(3, strlen($otpParts[0]) - 2)).'@'.$otpParts[1] : $otpEmail;
                 @endphp
-                <div class="auth-panel" data-panel="admin-otp" @if($activePanel !== 'admin-otp') hidden @endif>
-                    <p class="recovery-note">Code sent to <strong>{{ $adminOtpMasked }}</strong>. It expires after 10 minutes and works only once.</p>
-                    <form method="POST" action="{{ route('login.otp.verify') }}">
+                <div class="auth-panel" data-panel="device-otp" @if($activePanel !== 'device-otp') hidden @endif>
+                    <p class="recovery-note">This device has not signed in to this account before, so we emailed a code to <strong>{{ $otpMasked }}</strong>. It expires after 10 minutes and works only once.</p>
+                    <form method="POST" action="{{ route("{$otpRoute}.verify") }}">
                         @csrf
-                        <div class="field code-field"><i class="bi bi-shield-lock"></i><label for="admin-login-code" hidden>Six-digit sign-in code</label><input type="text" inputmode="numeric" name="verification_code" id="admin-login-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" data-validation-label="Sign-in code" data-validation-rule="verification-code" required autofocus></div>
-                        <button type="submit" class="login-button"><i class="bi bi-shield-check"></i><span>Verify &amp; Open Admin Panel</span></button>
+                        <div class="field code-field"><i class="bi bi-shield-lock"></i><label for="device-login-code" hidden>Six-digit sign-in code</label><input type="text" inputmode="numeric" name="verification_code" id="device-login-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" data-validation-label="Sign-in code" data-validation-rule="verification-code" required autofocus></div>
+                        <button type="submit" class="login-button"><i class="bi bi-shield-check"></i><span>Verify &amp; Open {{ $portalName }}</span></button>
                     </form>
                     <div class="recovery-footer">
-                        <form method="POST" action="{{ route('login.otp.resend') }}">@csrf<button type="submit" class="text-action">Resend code</button></form>
-                        <form method="POST" action="{{ route('login.otp.cancel') }}">@csrf<button type="submit" class="text-action muted">Cancel and return to login</button></form>
+                        <form method="POST" action="{{ route("{$otpRoute}.resend") }}">@csrf<button type="submit" class="text-action">Resend code</button></form>
+                        <form method="POST" action="{{ route("{$otpRoute}.cancel") }}">@csrf<button type="submit" class="text-action muted">Cancel and return to login</button></form>
                     </div>
                 </div>
             @endif

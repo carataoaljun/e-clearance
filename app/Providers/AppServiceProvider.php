@@ -12,6 +12,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -36,6 +37,14 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(StudentAccount::class, StudentAccountPolicy::class);
         Gate::policy(StudentSubmission::class, StudentSubmissionPolicy::class);
+
+        // Every layout loads Bootstrap 5 and the portal CSS styles `.pagination` /
+        // `.page-link` with --bs-pagination-* variables, but Laravel's paginator
+        // still defaulted to its Tailwind view. With no Tailwind stylesheet present
+        // its `sm:hidden` / `hidden sm:flex` blocks both rendered, and its chevron
+        // `<svg class="w-5 h-5">` had no size rule at all, so it painted at full
+        // container width. That is the giant arrow between duplicated page links.
+        Paginator::useBootstrapFive();
 
         RateLimiter::for('login', function (Request $request) {
             $identifier = $request->input('email')

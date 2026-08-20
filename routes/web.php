@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountRecoveryController;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AdminPersonnelController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\LoginCaptchaController;
@@ -186,6 +187,9 @@ Route::middleware(['admin.auth', 'no.history'])
 
         // Notifications
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+
+        // User activity trail (devices, sign-ins, and recorded changes)
+        Route::get('/activity', [ActivityLogController::class, 'index'])->name('activity.index');
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

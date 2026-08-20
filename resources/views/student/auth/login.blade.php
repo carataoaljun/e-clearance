@@ -377,6 +377,9 @@
             <div class="login-card">
                 @php
                     $activePanel = in_array($recoveryStep ?? 'login', ['email', 'code', 'reset'], true) ? $recoveryStep : 'login';
+                    // Set once the password is accepted from a browser this student has not verified before.
+                    $loginChallenge = session('login_challenge_student');
+                    if (is_array($loginChallenge)) $activePanel = 'device-otp';
                     $captchaRequired = session('login_security.captcha.student', false);
                     $emailParts = str_contains($recoveryEmail ?? '', '@') ? explode('@', $recoveryEmail, 2) : [];
                     $maskedEmail = count($emailParts) === 2
@@ -387,6 +390,7 @@
                         'email' => ['icon' => 'bi-envelope-check', 'title' => 'Recover Password', 'subtitle' => 'Verify the email registered to your student account.'],
                         'code' => ['icon' => 'bi-shield-check', 'title' => 'Check Your Email', 'subtitle' => 'Enter the six-digit verification code we sent.'],
                         'reset' => ['icon' => 'bi-key', 'title' => 'Create New Password', 'subtitle' => 'Choose a strong new password for your account.'],
+                        'device-otp' => ['icon' => 'bi-envelope-shield', 'title' => 'Verify This Device', 'subtitle' => 'Enter the one-time code sent to your registered email.'],
                     ];
                     $activeHeading = $panelHeadings[$activePanel];
                 @endphp
@@ -504,6 +508,32 @@
                     </form>
                     <form method="POST" action="{{ route('student.password-recovery.cancel') }}">@csrf<button type="submit" class="back-button"><i class="bi bi-x-lg"></i> Cancel Password Reset</button></form>
                 </div>
+
+                @if (is_array($loginChallenge))
+                    @php
+                        $otpEmail = (string) ($loginChallenge['email'] ?? '');
+                        $otpParts = str_contains($otpEmail, '@') ? explode('@', $otpEmail, 2) : [];
+                        $otpMasked = count($otpParts) === 2
+                            ? substr($otpParts[0], 0, min(2, strlen($otpParts[0]))) . str_repeat('•', max(3, strlen($otpParts[0]) - 2)) . '@' . $otpParts[1]
+                            : $otpEmail;
+                    @endphp
+                    <div class="auth-panel" id="device-otp-panel" data-panel="device-otp" @if($activePanel !== 'device-otp') hidden @endif>
+                        <p class="recovery-note">This device has not signed in to your account before, so we emailed a code to <strong>{{ $otpMasked }}</strong>. It expires after 10 minutes and works only once.</p>
+                        <form method="POST" action="{{ route('student.login.otp.verify') }}">
+                            @csrf
+                            <div class="field code-field">
+                                <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                                <label for="device_login_code" hidden>Six-digit sign-in code</label>
+                                <input type="text" inputmode="numeric" name="verification_code" id="device_login_code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" data-validation-label="Sign-in code" data-validation-rule="verification-code" required autofocus>
+                            </div>
+                            <button type="submit" class="login-button"><i class="bi bi-shield-check" aria-hidden="true"></i><span>Verify &amp; Continue</span></button>
+                        </form>
+                        <div class="recovery-footer">
+                            <form method="POST" action="{{ route('student.login.otp.resend') }}">@csrf<button type="submit" class="text-action">Resend code</button></form>
+                            <form method="POST" action="{{ route('student.login.otp.cancel') }}">@csrf<button type="submit" class="text-action muted">Cancel and return to login</button></form>
+                        </div>
+                    </div>
+                @endif
 
                 <p class="help">Need help? <a href="mailto:admin@mcc.edu.ph">Contact your administrator.</a></p>
             </div>

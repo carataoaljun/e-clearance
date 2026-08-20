@@ -12,6 +12,7 @@
     <a class="nav-link" href="{{ route('office.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
     <a class="nav-link active" href="{{ route('office.submissions') }}"><i class="bi bi-folder2-open me-2"></i> Submissions & Remark</a>
     <a class="nav-link" href="{{ route('office.clearance.requests') }}"><i class="bi bi-bar-chart-line me-2"></i> Student Clearance Requests</a>
+    <a class="nav-link" href="{{ route('office.chat') }}"><i class="bi bi-chat-square-text me-2"></i> Messages</a>
 @endsection
 
 @section('logout-form')

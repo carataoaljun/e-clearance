@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('instructor')->name('instructor.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
+    Route::post('login-code', [AuthController::class, 'verifyLoginCode'])
+        ->middleware('throttle:otp-verify')->name('login.otp.verify');
+    Route::post('login-code/resend', [AuthController::class, 'resendLoginCode'])
+        ->middleware('throttle:otp-send')->name('login.otp.resend');
+    Route::post('login-code/cancel', [AuthController::class, 'cancelLoginCode'])->name('login.otp.cancel');
 });
 
 // ── Auth-only ──

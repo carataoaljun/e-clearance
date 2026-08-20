@@ -101,10 +101,10 @@ class StudentPasswordRecoveryTest extends TestCase
 
         $this->assertTrue(Hash::check('NewPassword1!', $this->student->fresh()->password));
 
-        $this->post(route('student.login.submit'), [
+        $this->loginThroughDeviceCode('student', 'student.login.submit', [
             'student_id' => $this->student->student_id,
             'password' => 'NewPassword1!',
-        ])->assertRedirect(route('student.dashboard'));
+        ], 'student.login.otp.verify')->assertRedirect(route('student.dashboard'));
 
         $this->assertAuthenticatedAs($this->student->fresh(), 'student');
     }

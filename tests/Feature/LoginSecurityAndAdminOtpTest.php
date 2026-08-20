@@ -98,10 +98,10 @@ class LoginSecurityAndAdminOtpTest extends TestCase
             ])->assertSessionHasErrors('student_id');
         }
 
-        $this->post(route('student.login.submit'), [
+        $this->loginThroughDeviceCode('student', 'student.login.submit', [
             'student_id' => $student->student_id,
             'password' => 'Strong-Student-Password-123!',
-        ])->assertRedirect(route('student.dashboard'));
+        ], 'student.login.otp.verify')->assertRedirect(route('student.dashboard'));
         $this->assertAuthenticatedAs($student, 'student');
 
         $this->post(route('student.logout'));
@@ -127,24 +127,24 @@ class LoginSecurityAndAdminOtpTest extends TestCase
             'email' => $admin->email,
             'password' => 'Strong-Admin-Password-123!',
         ])->assertRedirect(route('login'))
-            ->assertSessionHas('admin_login_challenge');
+            ->assertSessionHas('login_challenge_admin');
 
         $this->assertGuest('admin');
         $this->get(route('login'))
             ->assertOk()
-            ->assertSee('Verify Your Sign-in')
-            ->assertSee('Verify &amp; Open Admin Panel', false);
+            ->assertSee('Verify This Device')
+            ->assertSee('Verify &amp; Open Main Admin Portal', false);
 
-        $challenge = session('admin_login_challenge');
+        $challenge = session('login_challenge_admin');
         $challenge['code_hash'] = Hash::make('482731');
 
-        $this->withSession(['admin_login_challenge' => $challenge])
+        $this->withSession(['login_challenge_admin' => $challenge])
             ->post(route('login.otp.verify'), ['verification_code' => '482731'])
             ->assertRedirect(route('dashboard'))
             ->assertSessionHas('login_success');
 
         $this->assertAuthenticatedAs($admin, 'admin');
-        $this->assertNull(session('admin_login_challenge'));
+        $this->assertNull(session('login_challenge_admin'));
         $this->assertDatabaseHas('security_audit_logs', [
             'event' => 'authentication.mfa_verified',
             'actor_guard' => 'admin',
@@ -159,8 +159,8 @@ class LoginSecurityAndAdminOtpTest extends TestCase
             'password' => 'Strong-Admin-Password-123!',
         ]);
 
-        $this->withSession(['admin_login_challenge' => [
-            'admin_id' => $admin->id,
+        $this->withSession(['login_challenge_admin' => [
+            'account_id' => $admin->id,
             'email' => $admin->email,
             'code_hash' => Hash::make('125904'),
             'expires_at' => now()->subSecond()->timestamp,
@@ -170,7 +170,7 @@ class LoginSecurityAndAdminOtpTest extends TestCase
         ])->assertSessionHasErrors('verification_code');
 
         $this->assertGuest('admin');
-        $this->assertNull(session('admin_login_challenge'));
+        $this->assertNull(session('login_challenge_admin'));
     }
 
     private function createStudent(string $studentId): StudentAccount

@@ -2,17 +2,51 @@
 
 namespace App\Http\Controllers\Office;
 
+use App\Http\Controllers\Concerns\VerifiesNewDevices;
 use App\Http\Controllers\Controller;
 use App\Models\AdminPersonnel;
 use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use App\Support\StrongPassword;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    use VerifiesNewDevices;
+
+    protected function deviceGuard(): string
+    {
+        return 'office';
+    }
+
+    protected function devicePanel(): string
+    {
+        return 'Office';
+    }
+
+    protected function deviceLoginRoute(): string
+    {
+        return 'office.login';
+    }
+
+    protected function deviceHomeRoute(): string
+    {
+        return 'office.dashboard';
+    }
+
+    protected function deviceErrorField(): string
+    {
+        return 'login';
+    }
+
+    protected function deviceAccount(string|int $id): ?Authenticatable
+    {
+        return AdminPersonnel::find($id);
+    }
+
     public function showLogin()
     {
         if (Auth::guard('office')->check()) {
@@ -45,13 +79,10 @@ class AuthController extends Controller
             $security->fail('login', 'role');
         }
 
-        Auth::guard('office')->login($personnel, $request->boolean('remember'));
         $security->clear();
         $request->session()->forget('portal_password_recovery_office');
-        $request->session()->regenerate();
 
-        return redirect()->route('office.dashboard')
-            ->with('login_success', 'Login successful. Welcome to the Office panel.');
+        return $this->completeLogin($request, $personnel, $request->boolean('remember'));
     }
 
     public function logout(Request $request)

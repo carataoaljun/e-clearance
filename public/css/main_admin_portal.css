@@ -230,6 +230,74 @@ body.main-admin-portal .btn-save:hover {
     box-shadow: 0 11px 23px rgba(21, 119, 191, .2), inset 0 1px 1px rgba(255, 255, 255, .3);
 }
 
+/*
+    Metric cards and panel headings, shared by every Main Admin screen that shows
+    them. These lived inside dashboard.blade.php's own @push('styles'), so a second
+    page reusing the same markup got the glass surface (that comes from the layout)
+    but none of this: the card never became a flex row and .metric-symbol never
+    became a tile, leaving a bare undersized <i> stacked under the text.
+*/
+body.main-admin-portal .admin-metrics {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(130px, 1fr));
+    gap: .75rem;
+}
+
+body.main-admin-portal .admin-metric {
+    display: flex;
+    min-width: 0;
+    min-height: 122px;
+    padding: 1rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .65rem;
+    border-radius: 1rem;
+    transition: transform .2s ease;
+}
+
+body.main-admin-portal .admin-metric:hover { transform: translateY(-3px); }
+body.main-admin-portal .admin-metric small { display: block; margin-bottom: .3rem; color: #687b98; font-size: .82rem; }
+body.main-admin-portal .admin-metric strong { display: block; color: #071b50; font-size: 1.65rem; line-height: 1; }
+body.main-admin-portal .admin-metric span { display: block; margin-top: .55rem; color: #71809a; font-size: .74rem; }
+
+body.main-admin-portal .metric-symbol {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 12px;
+    font-size: 1.05rem;
+}
+
+body.main-admin-portal .symbol-blue { color: #075bea; background: rgba(7, 91, 234, .13); }
+body.main-admin-portal .symbol-purple { color: #7048cf; background: rgba(112, 72, 207, .14); }
+body.main-admin-portal .symbol-cyan { color: #0783a8; background: rgba(20, 180, 215, .14); }
+body.main-admin-portal .symbol-green { color: #14865c; background: rgba(25, 171, 113, .14); }
+body.main-admin-portal .symbol-amber { color: #bd7900; background: rgba(255, 178, 22, .17); }
+
+body.main-admin-portal .panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+}
+
+body.main-admin-portal .panel-heading h3 { margin: 0 0 .25rem; color: #102a56; font-size: 1.05rem; font-weight: 800; }
+body.main-admin-portal .panel-heading p { margin: 0; color: #71809a; font-size: .78rem; }
+
+@media (max-width: 1050px) {
+    body.main-admin-portal .admin-metrics { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    body.main-admin-portal .admin-metrics { gap: .65rem; }
+    body.main-admin-portal .admin-metric { min-height: 112px; padding: .85rem; }
+    body.main-admin-portal .admin-metric strong { font-size: 1.5rem; }
+    body.main-admin-portal .metric-symbol { width: 38px; height: 38px; }
+}
+
 /* Filter and table workspaces. */
 body.main-admin-portal .filter-bar,
 body.main-admin-portal .data-table-wrap,

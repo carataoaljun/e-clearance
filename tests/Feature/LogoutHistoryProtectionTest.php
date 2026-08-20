@@ -92,14 +92,14 @@ class LogoutHistoryProtectionTest extends TestCase
         ];
 
         foreach ($accounts as [$guard, $loginRoute, $credentials, $logoutRoute, $protectedRoute, $expectedLoginRoute, $account]) {
-            $loginResponse = $this->post(route($loginRoute), $credentials);
-            if ($guard === 'admin') {
-                $loginResponse->assertRedirect(route('login'));
-                $challenge = session('admin_login_challenge');
-                $challenge['code_hash'] = Hash::make('629105');
-                $loginResponse = $this->withSession(['admin_login_challenge' => $challenge])
-                    ->post(route('login.otp.verify'), ['verification_code' => '629105']);
-            }
+            // Each account is signing in for the first time, so every portal
+            // mails a code before it opens the session.
+            $loginResponse = $this->loginThroughDeviceCode(
+                $guard,
+                $loginRoute,
+                $credentials,
+                $guard === 'admin' ? 'login.otp.verify' : "{$guard}.login.otp.verify",
+            );
             $loginResponse->assertRedirect(route($protectedRoute))->assertSessionHas('login_success');
             $this->assertAuthenticatedAs($account, $guard);
 

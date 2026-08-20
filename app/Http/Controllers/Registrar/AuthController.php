@@ -2,17 +2,51 @@
 
 namespace App\Http\Controllers\Registrar;
 
+use App\Http\Controllers\Concerns\VerifiesNewDevices;
 use App\Http\Controllers\Controller;
 use App\Models\Registrar;
 use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use App\Support\StrongPassword;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    use VerifiesNewDevices;
+
+    protected function deviceGuard(): string
+    {
+        return 'registrar';
+    }
+
+    protected function devicePanel(): string
+    {
+        return 'Registrar';
+    }
+
+    protected function deviceLoginRoute(): string
+    {
+        return 'registrar.login';
+    }
+
+    protected function deviceHomeRoute(): string
+    {
+        return 'registrar.dashboard';
+    }
+
+    protected function deviceErrorField(): string
+    {
+        return 'login';
+    }
+
+    protected function deviceAccount(string|int $id): ?Authenticatable
+    {
+        return Registrar::find($id);
+    }
+
     public function showLogin()
     {
         if (Auth::guard('registrar')->check()) {
@@ -40,13 +74,10 @@ class AuthController extends Controller
             $security->fail('login');
         }
 
-        Auth::guard('registrar')->login($registrar, $request->boolean('remember'));
         $security->clear();
         $request->session()->forget('portal_password_recovery_registrar');
-        $request->session()->regenerate();
 
-        return redirect()->route('registrar.dashboard')
-            ->with('login_success', 'Login successful. Welcome to the Registrar panel.');
+        return $this->completeLogin($request, $registrar, $request->boolean('remember'));
     }
 
     public function logout(Request $request)

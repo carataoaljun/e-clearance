@@ -2,21 +2,54 @@
 
 namespace App\Http\Controllers\Student;
 
+use App\Http\Controllers\Concerns\VerifiesNewDevices;
 use App\Http\Controllers\Controller;
 use App\Models\StudentAccount;
 use App\Support\AuditLogger;
 use App\Support\LoginSecurity;
 use App\Support\PostLogout;
 use App\Support\StrongPassword;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    use VerifiesNewDevices;
+
+    protected function deviceGuard(): string
+    {
+        return 'student';
+    }
+
+    protected function devicePanel(): string
+    {
+        return 'Student';
+    }
+
+    protected function deviceLoginRoute(): string
+    {
+        return 'student.login';
+    }
+
+    protected function deviceHomeRoute(): string
+    {
+        return 'student.dashboard';
+    }
+
+    protected function deviceErrorField(): string
+    {
+        return 'student_id';
+    }
+
+    protected function deviceAccount(string|int $id): ?Authenticatable
+    {
+        return StudentAccount::find($id);
+    }
+
     public function showLogin(Request $request)
     {
         if (Auth::guard('student')->check()) {
@@ -47,13 +80,10 @@ class AuthController extends Controller
             $security->fail('student_id');
         }
 
-        Auth::guard('student')->login($student, $request->boolean('remember'));
         $security->clear();
         $request->session()->forget('student_password_recovery');
-        $request->session()->regenerate();
 
-        return redirect()->route('student.dashboard')
-            ->with('login_success', 'Login successful. Welcome to the Student panel.');
+        return $this->completeLogin($request, $student, $request->boolean('remember'));
     }
 
     public function sendRecoveryCode(Request $request)
