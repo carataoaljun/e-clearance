@@ -37,9 +37,21 @@ given browser. A correct password alone never opens a session.
   `deviceAccount()`, and — where the login form is not keyed on `email` —
   `deviceErrorField()`.
 - `App\Support\LoginChallenge` holds the code mechanics: session key
-  `login_challenge_{guard}`, hashed code, 10-minute expiry, 5 attempts. The plain
-  code is never stored, except as `local_code` when running locally with the `log`
-  mailer, which the login page then displays.
+  `login_challenge_{guard}`, hashed code, 10-minute expiry, 5 attempts per code.
+  The plain code is **never** rendered back into any HTTP response, in any
+  environment — an earlier version echoed it onto the login page when running
+  locally without real SMTP, which was a genuine leak: Laravel's own default
+  mailer is `log` (`env('MAIL_MAILER', 'log')`), so any unconfigured environment
+  silently fell back to it and the code became visible HTML to anyone loading
+  the page, no email access required. A developer testing with the `log` mailer
+  can already read the full rendered email in `storage/logs/laravel.log`.
+- Brute-forcing the code is bounded two ways. The per-code `attempts` counter
+  (5) protects one code, but resets to zero on every "Resend code", so alone it
+  caps nothing across a longer attempt. `LoginChallengeLockout` (private to
+  `LoginChallenge.php`) is the real ceiling: an account-level `RateLimiter` key,
+  independent of resend, that accumulates wrong guesses across every code the
+  account is issued (`login_security.otp_account_lockout_after`, default 8)
+  before `send()` itself refuses to mail another code.
 - `App\Support\TrustedDevice` remembers verified browsers in **one encrypted
   cookie**, not a table — deploys never run `artisan migrate`, and a table that
   never got created would mean a code on every login forever. Entries are keyed

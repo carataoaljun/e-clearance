@@ -132,14 +132,8 @@ class AuthController extends Controller
             'stage' => 'code',
         ]);
 
-        $response = redirect()->route('student.login')
+        return redirect()->route('student.login')
             ->with('recovery_status', 'A six-digit verification code was sent to your registered email.');
-
-        if (app()->environment('local') && config('mail.default') === 'log') {
-            $response->with('local_verification_code', $code);
-        }
-
-        return $response;
     }
 
     public function verifyRecoveryCode(Request $request)

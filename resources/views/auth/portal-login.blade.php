@@ -39,7 +39,7 @@
         .login-heading h2 { margin:0; font-size:clamp(1.75rem,2.5vw,2.25rem); letter-spacing:-.04em; }
         .login-heading p { margin:8px 0 22px; color:var(--muted); font-size:.92rem; }
         .alert { display:flex; gap:9px; align-items:flex-start; margin-bottom:15px; padding:11px 13px; color:#a61b2b; border:1px solid #ffc5cc; border-radius:13px; background:#fff1f3; font-size:.83rem; }
-        .alert.success{color:#12613a;border-color:#b9ebcf;background:#edfff4}.alert.info{color:#14547d;border-color:#b9ddf5;background:#edf8ff}.alert.local-code{color:#704b00;border-color:#f3d48a;background:#fff9e8}
+        .alert.success{color:#12613a;border-color:#b9ebcf;background:#edfff4}.alert.info{color:#14547d;border-color:#b9ddf5;background:#edf8ff}
         .field { position:relative; margin-bottom:14px; }.field>i{position:absolute;z-index:1;top:50%;left:19px;color:var(--blue);font-size:1.15rem;transform:translateY(-50%);pointer-events:none}
         .field input,.field select { width:100%; height:56px; padding:0 52px; color:var(--ink); border:1px solid #ccdbed; border-radius:15px; outline:none; background:rgba(255,255,255,.82); box-shadow:0 8px 18px rgba(41,98,159,.06); font-size:.96rem; transition:.2s; }
         .field select { padding-right:42px; appearance:auto; }.field input::placeholder{color:#6c80a2}.field input:focus,.field select:focus{border-color:#4791ff;background:#fff;box-shadow:0 0 0 4px rgba(7,91,234,.1)}
@@ -98,7 +98,6 @@
             <div class="login-heading"><div class="role-badge"><i id="auth-heading-icon" class="bi {{ $activeHeading['icon'] }}"></i></div><h2 id="auth-heading-title">{{ $activeHeading['title'] }}</h2><p id="auth-heading-copy">{{ $activeHeading['subtitle'] }}</p></div>
             @if(session('status'))<div class="alert success" role="status"><i class="bi bi-check-circle"></i><span>{{ session('status') }}</span></div>@endif
             @if(session('recovery_status'))<div class="alert info" role="status"><i class="bi bi-info-circle"></i><span>{{ session('recovery_status') }}</span></div>@endif
-            @if(session('local_verification_code'))<div class="alert local-code" role="status"><i class="bi bi-terminal"></i><span>Local testing code: <strong>{{ session('local_verification_code') }}</strong></span></div>@endif
             @if($firstError)<div class="alert" role="alert"><i class="bi bi-exclamation-circle"></i><span>{{ $firstError }}</span></div>@endif
 
             <div class="auth-panel" data-panel="login" @if($activePanel !== 'login') hidden @endif>

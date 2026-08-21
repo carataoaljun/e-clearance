@@ -11,6 +11,11 @@ return [
     'otp_lifetime_seconds' => (int) env('LOGIN_OTP_LIFETIME_SECONDS', 10 * 60),
     'otp_max_attempts' => (int) env('LOGIN_OTP_MAX_ATTEMPTS', 5),
 
+    // Independent of otp_max_attempts and never reset by "Resend code": the
+    // total wrong guesses one account may accumulate across every code it is
+    // sent before the account itself locks out for lockout_seconds.
+    'otp_account_lockout_after' => (int) env('LOGIN_OTP_ACCOUNT_LOCKOUT_AFTER', 8),
+
     // How long a browser stays verified for an account before it is asked again.
     'trusted_device_days' => (int) env('LOGIN_TRUSTED_DEVICE_DAYS', 30),
 ];

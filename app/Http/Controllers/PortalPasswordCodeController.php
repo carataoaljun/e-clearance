@@ -59,14 +59,8 @@ class PortalPasswordCodeController extends Controller
             'stage' => 'code',
         ]);
 
-        $response = redirect()->route($config['loginRoute'])
+        return redirect()->route($config['loginRoute'])
             ->with('recovery_status', 'A six-digit verification code was sent to your registered email.');
-
-        if (app()->environment('local') && config('mail.default') === 'log') {
-            $response->with('local_verification_code', $code);
-        }
-
-        return $response;
     }
 
     public function verifyCode(Request $request, string $portal)

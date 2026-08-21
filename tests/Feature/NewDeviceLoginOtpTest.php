@@ -306,6 +306,116 @@ class NewDeviceLoginOtpTest extends TestCase
         $this->assertGuest('student');
     }
 
+    /**
+     * A prior version of this feature echoed the plain code onto the login
+     * page whenever the app ran with no real mailer configured, on the theory
+     * that a developer needed to see it somewhere. That was a genuine leak:
+     * Laravel's own default mailer is "log" (`env('MAIL_MAILER', 'log')`), so
+     * any unconfigured environment fell into it silently, and the code then
+     * rendered as visible HTML to anyone who loaded the page — no access to
+     * the inbox required. The guarantee this test protects is the outcome,
+     * not the removed mechanism: the emailed code must never appear anywhere
+     * in a response, regardless of what triggered the original leak.
+     */
+    public function test_the_emailed_code_never_appears_in_any_response_or_session_value(): void
+    {
+        $this->createAccount('student');
+
+        $challengeResponse = $this->withServerVariables(['HTTP_USER_AGENT' => self::DESKTOP])
+            ->post(route('student.login.submit'), $this->credentials('student'));
+
+        $sent = $this->sentMessages();
+        $this->assertCount(1, $sent);
+        $body = quoted_printable_decode($sent[0]->toString());
+        $this->assertSame(1, preg_match('/letter-spacing:8px;color:#075bea">(\d{6})</', $body, $matches));
+        $code = $matches[1];
+
+        // Nothing under any key exposes the plain digits back to the browser.
+        foreach ($challengeResponse->getSession()->all() as $value) {
+            if (is_string($value)) {
+                $this->assertStringNotContainsString($code, $value);
+            }
+        }
+        $challenge = session(LoginChallenge::sessionKey('student'));
+        $this->assertIsArray($challenge);
+        $this->assertArrayNotHasKey('local_code', $challenge);
+        $this->assertStringNotContainsString($code, (string) $challenge['code_hash']);
+
+        // The rendered login page — where the leak actually showed up — must
+        // not contain the code, and the removed feature must not resurface.
+        $page = $this->get(route('student.login'));
+        $page->assertOk();
+        $page->assertDontSee($code);
+        $page->assertDontSeeText('Local testing code');
+        $this->assertStringNotContainsString('local_verification_code', $page->getContent());
+    }
+
+    /**
+     * The per-code attempt counter alone is not the real defense: "Resend
+     * code" hands out a fresh code with its own counter reset to zero, so an
+     * attacker who never runs out of resends would never run out of guesses
+     * either. The account-level lock in LoginChallengeLockout is what closes
+     * that gap — it accumulates wrong guesses across every code the account
+     * is issued, and once it trips, send() itself refuses to mail another one.
+     */
+    public function test_wrong_guesses_lock_the_account_across_resent_codes(): void
+    {
+        $this->createAccount('student');
+        $guard = 'student';
+        $key = LoginChallenge::sessionKey($guard);
+
+        $this->post(route('student.login.submit'), $this->credentials('student'));
+
+        // Four wrong guesses against the first code — short of exhausting it
+        // (the per-code cap is 5), so the code itself survives.
+        $challenge = session($key);
+        for ($i = 0; $i < 4; $i++) {
+            $this->withSession([$key => $challenge])
+                ->post(route('student.login.otp.verify'), ['verification_code' => '000000'])
+                ->assertSessionHasErrors('verification_code');
+            $challenge = session($key);
+        }
+        $this->assertSame(4, $challenge['attempts']);
+
+        $this->withSession([$key => $challenge])
+            ->post(route('student.login.otp.resend'))
+            ->assertRedirect(route('student.login'));
+        $resent = session($key);
+        $this->assertSame(0, $resent['attempts'], 'Resend must reset the per-code counter.');
+
+        // Four more wrong guesses against the resent code: 4 + 4 = 8, tripping
+        // the account-level lock before this second code's own cap of 5 does.
+        $challenge = $resent;
+        for ($i = 0; $i < 3; $i++) {
+            $this->withSession([$key => $challenge])
+                ->post(route('student.login.otp.verify'), ['verification_code' => '000000'])
+                ->assertSessionHasErrors('verification_code');
+            $challenge = session($key);
+        }
+
+        $locking = $this->withSession([$key => $challenge])
+            ->post(route('student.login.otp.verify'), ['verification_code' => '000000']);
+        $locking->assertSessionHasErrors('verification_code');
+        $this->assertStringContainsString(
+            'Too many incorrect codes',
+            $locking->getSession()->get('errors')->first('verification_code'),
+        );
+        $this->assertNull(session($key), 'The account-level lock must discard the challenge outright.');
+
+        $lockLog = SecurityAuditLog::where('event', 'authentication.mfa_locked')
+            ->latest('id')->first();
+        $this->assertSame('locked_after_verify', $lockLog->metadata['reason']);
+
+        // Locked out means locked out: even "Resend" is refused, so the
+        // attacker cannot buy fresh guesses by cycling codes.
+        $sentBefore = $this->sentMessages()->count();
+        $this->post(route('student.login.otp.resend'))
+            ->assertRedirect(route('student.login'))
+            ->assertSessionHasErrors('student_id');
+        $this->assertNull(session($key));
+        $this->assertCount($sentBefore, $this->sentMessages(), 'A locked account must not receive another code.');
+    }
+
     public function test_an_account_without_an_email_cannot_be_signed_in(): void
     {
         StudentAccount::create([

@@ -5,6 +5,7 @@ namespace App\Support;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -15,7 +16,27 @@ use Throwable;
  * the code checks out, belong to Concerns\VerifiesNewDevices.
  *
  * The challenge lives in the session, never in the database, and the plain code
- * is never stored: only its hash, an expiry, and an attempt counter.
+ * is never stored anywhere, in any environment — only its hash, an expiry, and
+ * an attempt counter. Earlier code echoed the plain digits back onto the login
+ * page when the app ran locally without real SMTP, on the theory that a
+ * developer with no mailer configured still needed to see the code. That was a
+ * genuine leak: Laravel's own default mailer is "log" (env('MAIL_MAILER',
+ * 'log')), so any environment left unconfigured — a fresh clone, a broken SMTP
+ * credential — silently fell back to it, and the code then rendered as plain
+ * HTML for anyone who loaded the page, no email access required. A developer
+ * testing with the "log" mailer already gets the full rendered email, code
+ * included, in storage/logs/laravel.log, which needs filesystem access to
+ * read, not just a browser — so nothing is lost by never rendering it into
+ * the response.
+ *
+ * Brute-forcing the code itself is bounded two ways. Each individual code
+ * accepts at most maxAttempts() wrong guesses before it is discarded, but that
+ * counter resets to zero on every "Resend code", so on its own it caps
+ * nothing across a longer attack. The real ceiling is an account-level lock,
+ * independent of resend and of the per-code counter: accountLockout() tracks
+ * total wrong guesses against this (guard, account) pair, sustained across as
+ * many codes as get requested, and once it trips, send() itself refuses to
+ * issue another code until the lock expires.
  */
 final class LoginChallenge
 {
@@ -25,6 +46,8 @@ final class LoginChallenge
     public const NO_EMAIL = 'no_email';
 
     public const FAILED = 'failed';
+
+    public const LOCKED = 'locked';
 
     public static function sessionKey(string $guard): string
     {
@@ -43,7 +66,7 @@ final class LoginChallenge
      * Mail a fresh code and park the challenge in the session.
      *
      * @param  array{id: string|int, email: ?string, name: string, remember: bool}  $account
-     * @return string one of SENT, NO_EMAIL, FAILED
+     * @return string one of SENT, NO_EMAIL, FAILED, LOCKED
      */
     public static function send(
         Request $request,
@@ -61,6 +84,17 @@ final class LoginChallenge
             ]);
 
             return self::NO_EMAIL;
+        }
+
+        $accountId = $account['id'] ?? '';
+
+        if (self::accountLockout($guard, $accountId)->tooManyAttempts()) {
+            $request->session()->forget(self::sessionKey($guard));
+            AuditLogger::record('authentication.mfa_locked', $guard, null, null, $accountId, [
+                'reason' => 'locked_before_send',
+            ]);
+
+            return self::LOCKED;
         }
 
         $code = (string) random_int(100000, 999999);
@@ -86,19 +120,15 @@ final class LoginChallenge
         }
 
         $request->session()->put(self::sessionKey($guard), [
-            'account_id' => $account['id'],
+            'account_id' => $accountId,
             'email' => $email,
             'remember' => (bool) ($account['remember'] ?? false),
             'code_hash' => Hash::make($code),
             'expires_at' => now()->addSeconds($lifetime)->timestamp,
             'attempts' => 0,
-            // Mirrors the password-recovery flow: with no real mailer running
-            // there is no inbox to read the code from, so hand it back to the
-            // login page. Never set anywhere but local development.
-            'local_code' => self::echoesCodeLocally() ? $code : null,
         ]);
 
-        AuditLogger::record('authentication.mfa_challenge_sent', $guard, null, null, $account['id'] ?? null, [
+        AuditLogger::record('authentication.mfa_challenge_sent', $guard, null, null, $accountId, [
             'resend' => $resend,
             'expires_in_seconds' => $lifetime,
             'device' => TrustedDevice::label($request),
@@ -128,18 +158,53 @@ final class LoginChallenge
             ]);
         }
 
+        $accountId = $challenge['account_id'] ?? '';
+        $lockout = self::accountLockout($guard, $accountId);
+
+        if ($lockout->tooManyAttempts()) {
+            $request->session()->forget($key);
+            AuditLogger::record('authentication.mfa_locked', $guard, null, null, $accountId, [
+                'reason' => 'locked_before_verify',
+            ]);
+
+            throw ValidationException::withMessages([
+                'verification_code' => 'Too many incorrect codes. Please enter your password again.',
+            ]);
+        }
+
         if (! Hash::check($code, (string) ($challenge['code_hash'] ?? ''))) {
+            // Two counters, deliberately separate. The per-challenge count below
+            // only ever discards THIS code -- "Resend" hands out a brand new one
+            // with its own count reset to zero. The account-level hit above
+            // survives every resend, so repeatedly cycling codes cannot be used
+            // to reset an attacker's remaining guesses.
+            $lockout->hit();
+
             $attempts = (int) ($challenge['attempts'] ?? 0) + 1;
             $challenge['attempts'] = $attempts;
             $request->session()->put($key, $challenge);
 
-            AuditLogger::record('authentication.mfa_failed', $guard, null, null, $challenge['account_id'] ?? null, [
+            AuditLogger::record('authentication.mfa_failed', $guard, null, null, $accountId, [
                 'attempts' => $attempts,
+                'account_attempts' => $lockout->attempts(),
             ]);
+
+            if ($lockout->tooManyAttempts()) {
+                $request->session()->forget($key);
+                AuditLogger::record('authentication.mfa_locked', $guard, null, null, $accountId, [
+                    'reason' => 'locked_after_verify',
+                ]);
+
+                throw ValidationException::withMessages([
+                    'verification_code' => 'Too many incorrect codes. Please enter your password again.',
+                ]);
+            }
 
             if ($attempts >= self::maxAttempts()) {
                 $request->session()->forget($key);
-                AuditLogger::record('authentication.mfa_locked', $guard, null, null, $challenge['account_id'] ?? null);
+                AuditLogger::record('authentication.mfa_locked', $guard, null, null, $accountId, [
+                    'reason' => 'code_exhausted',
+                ]);
 
                 throw ValidationException::withMessages([
                     'verification_code' => 'Too many incorrect codes. Please enter your password again.',
@@ -151,6 +216,7 @@ final class LoginChallenge
             ]);
         }
 
+        $lockout->clear();
         $request->session()->forget($key);
 
         return $challenge;
@@ -161,21 +227,9 @@ final class LoginChallenge
         $request->session()->forget(self::sessionKey($guard));
     }
 
-    /** The plain code, but only when local development has no mailer to send it. */
-    public static function localCode(Request $request, string $guard): ?string
+    private static function accountLockout(string $guard, string|int $accountId): LoginChallengeLockout
     {
-        if (! self::echoesCodeLocally()) {
-            return null;
-        }
-
-        $code = self::pending($request, $guard)['local_code'] ?? null;
-
-        return is_string($code) ? $code : null;
-    }
-
-    private static function echoesCodeLocally(): bool
-    {
-        return app()->environment('local') && config('mail.default') === 'log';
+        return new LoginChallengeLockout($guard, $accountId);
     }
 
     private static function lifetimeSeconds(): int
@@ -186,5 +240,52 @@ final class LoginChallenge
     private static function maxAttempts(): int
     {
         return max(1, (int) config('login_security.otp_max_attempts', 5));
+    }
+}
+
+/**
+ * A small RateLimiter wrapper scoped to one (guard, account) pair. Kept
+ * private to this file — nothing outside LoginChallenge needs to touch it.
+ * Unlike the per-challenge attempt count, this key is never cleared by
+ * issuing a new code, only by a correct one or by its own decay window.
+ */
+final class LoginChallengeLockout
+{
+    private readonly string $key;
+
+    public function __construct(string $guard, string|int $accountId)
+    {
+        $hash = substr(hash('sha256', (string) $accountId), 0, 20);
+        $this->key = "login-otp-lockout:{$guard}:{$hash}";
+    }
+
+    public function tooManyAttempts(): bool
+    {
+        return RateLimiter::tooManyAttempts($this->key, self::maxAttempts());
+    }
+
+    public function attempts(): int
+    {
+        return RateLimiter::attempts($this->key);
+    }
+
+    public function hit(): void
+    {
+        RateLimiter::hit($this->key, self::decaySeconds());
+    }
+
+    public function clear(): void
+    {
+        RateLimiter::clear($this->key);
+    }
+
+    private static function maxAttempts(): int
+    {
+        return max(1, (int) config('login_security.otp_account_lockout_after', 8));
+    }
+
+    private static function decaySeconds(): int
+    {
+        return max(60, (int) config('login_security.lockout_seconds', 900));
     }
 }

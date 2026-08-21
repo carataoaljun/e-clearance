@@ -143,7 +143,6 @@
         .alert { position:relative; display: flex; gap: 9px; align-items: flex-start; margin-bottom: 18px; padding: 12px 14px; color: #a61b2b; border: 1px solid #ffc5cc; border-radius: 13px; background: #fff1f3; font-size: .86rem; }
         .alert.success { color:#12613a; border-color:#b9ebcf; background:#edfff4; }
         .alert.info { color:#14547d; border-color:#b9ddf5; background:#edf8ff; }
-        .alert.local-code { color:#704b00; border-color:#f3d48a; background:#fff9e8; }
         .field { position: relative; margin-bottom: 16px; }
         .field > i { position: absolute; z-index: 1; top: 50%; left: 20px; color: var(--blue); font-size: 1.2rem; transform: translateY(-50%); pointer-events: none; }
         .field input { width: 100%; height: 58px; padding: 0 55px; color: var(--ink); border: 1px solid #ccdbed; border-radius: 16px; outline: none; background: rgba(255,255,255,.82); box-shadow: 0 8px 18px rgba(41,98,159,.06); font-size: 1.05rem; transition: border-color .2s, box-shadow .2s, background .2s; }
@@ -407,10 +406,6 @@
 
                 @if (session('recovery_status'))
                     <div class="alert info" role="status"><i class="bi bi-info-circle"></i><span>{{ session('recovery_status') }}</span></div>
-                @endif
-
-                @if (session('local_verification_code'))
-                    <div class="alert local-code" role="status"><i class="bi bi-terminal"></i><span>Local testing code: <strong>{{ session('local_verification_code') }}</strong></span></div>
                 @endif
 
                 @if ($errors->any())

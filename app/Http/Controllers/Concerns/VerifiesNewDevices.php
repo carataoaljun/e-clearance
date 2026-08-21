@@ -141,24 +141,20 @@ trait VerifiesNewDevices
 
         if ($status !== LoginChallenge::SENT) {
             return redirect()->route($this->deviceLoginRoute())->withErrors([
-                $this->deviceErrorField() => $status === LoginChallenge::NO_EMAIL
-                    ? 'This account has no email address on file, so a sign-in code cannot be sent. Contact your administrator.'
-                    : 'The sign-in code could not be emailed. Please try again shortly.',
+                $this->deviceErrorField() => match ($status) {
+                    LoginChallenge::NO_EMAIL => 'This account has no email address on file, so a sign-in code cannot be sent. Contact your administrator.',
+                    LoginChallenge::LOCKED => 'Too many incorrect sign-in codes. Please wait a few minutes before trying again.',
+                    default => 'The sign-in code could not be emailed. Please try again shortly.',
+                },
             ]);
         }
 
-        $response = redirect()->route($this->deviceLoginRoute())->with(
+        return redirect()->route($this->deviceLoginRoute())->with(
             'status',
             $resend
                 ? 'A new sign-in code was sent to your registered email.'
                 : 'New device detected. Check your email for the six-digit sign-in code.',
         );
-
-        if ($localCode = LoginChallenge::localCode($request, $this->deviceGuard())) {
-            $response->with('local_verification_code', $localCode);
-        }
-
-        return $response;
     }
 
     private function openSession(Request $request, Authenticatable $account, bool $remember)
